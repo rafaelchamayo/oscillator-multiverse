@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useT } from '../i18n/useT';
 import { getPlugin, getPlugins } from '../oscillators/registry';
 import { LangSwitch } from './LangSwitch';
+import { SimStage } from './SimStage';
 import { Tabs } from './Tabs';
 import { navigate, useHashRoute } from './useHashRoute';
 
@@ -30,16 +31,20 @@ export function AppShell() {
         <LangSwitch />
       </header>
       <main className="workspace" data-testid={`workspace-${active.id}`}>
-        <section className="stage">
-          <div className="placeholder">
-            <h1 className="placeholder__title">{t(`osc.${active.id}.title`)}</h1>
-            <p className="placeholder__tagline">{t(`osc.${active.id}.tagline`)}</p>
-            <div className="placeholder__card">
-              <strong>{t('placeholder.comingSoon')}</strong>
-              <p>{t('placeholder.body')}</p>
+        {active.sim ? (
+          <SimStage key={active.id} plugin={{ ...active, sim: active.sim }} />
+        ) : (
+          <section className="stage">
+            <div className="placeholder">
+              <h1 className="placeholder__title">{t(`osc.${active.id}.title`)}</h1>
+              <p className="placeholder__tagline">{t(`osc.${active.id}.tagline`)}</p>
+              <div className="placeholder__card">
+                <strong>{t('placeholder.comingSoon')}</strong>
+                <p>{t('placeholder.body')}</p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
         <aside className="side-panel" aria-hidden />
       </main>
     </div>

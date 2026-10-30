@@ -10,5 +10,20 @@
   "placeholder": {
     "comingSoon": "Scene under construction",
     "body": "The interactive simulation will live here. Soon you'll grab the block, fling it and watch it draw its own equation."
+  },
+  "toolbar": {
+    "label": "Simulation controls",
+    "play": "Play",
+    "pause": "Pause",
+    "reset": "Reset",
+    "speed": "Speed: {speed}×",
+    "serious": "Serious mode (no personality)",
+    "resetView": "Reset view"
+  },
+  "keys": {
+    "space": "Space"
+  },
+  "scene": {
+    "wii": "wheee!"
   }
 }

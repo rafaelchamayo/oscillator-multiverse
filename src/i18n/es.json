@@ -10,5 +10,20 @@
   "placeholder": {
     "comingSoon": "Escena en construcción",
     "body": "Aquí vivirá la simulación interactiva. Pronto podrás agarrar el bloque, lanzarlo y ver cómo dibuja su propia ecuación."
+  },
+  "toolbar": {
+    "label": "Controles de la simulación",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "reset": "Reiniciar",
+    "speed": "Velocidad: {speed}×",
+    "serious": "Modo serio (sin personalidad)",
+    "resetView": "Restablecer vista"
+  },
+  "keys": {
+    "space": "Espacio"
+  },
+  "scene": {
+    "wii": "¡wii!"
   }
 }

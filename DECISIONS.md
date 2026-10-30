@@ -32,6 +32,30 @@ Minor, reversible decisions taken during implementation, and why.
   (2 → `2.0`, 0.25 → `0.25`). Gravity appears as `− m·g` with both values (e.g. `−2.0·9.81`).
 - **Phase φ** is the lag of the response behind the drive, x_ss = x_eq + A cos(ωt − φ), φ ∈ [0, π].
 
+## Phase 2
+
+- **Scene layout (meters)**: wall face at u = −1.35, block center at u = x, spring from the wall to the
+  block's face. The block's side is 0.34 m·√(m/2 kg) (area ∝ m), so the drawn rest length shortens slightly
+  as m grows; the wall never moves. x is clamped so the spring keeps ≥ 0.16 m and x ≤ 1.5 m.
+- **Spring look**: 10–22 coils and a 2–6.5 px wire, both increasing linearly with k over its slider range.
+  Each coil is a side-viewed circle (prolate cycloid), back strands darker, so compression is real.
+- **Zoom magnifies physical objects** (spring wire, wall, block outline); handles and labels keep their
+  screen size.
+- **Fling**: least-squares slope of the pointer over the last 80 ms; a release counts as a fling above
+  0.25 m/s (real time). The resulting v₀ is divided by the sim speed so the block leaves the hand at the speed
+  it is seen moving, and is capped at ±4 m/s. Releasing still keeps the arrow's v₀ (paused) or 0 (running).
+- **Editing while paused** (drag x₀ or the arrow) also sets the initial conditions that Reset restores.
+  Reset goes back to t = 0 and pauses.
+- **Velocity arrow**: starts at the block face, 0.22 m per m/s, editable (with a handle) only while paused;
+  while running it shows the live v, dimmed.
+- **Personality**: eyes follow v; stretch along motion when fast, squash at turning points (≤ 9%,
+  area-preserving, centered — the physical position and hit box never change); worried face when the spring
+  strain passes ~55%; gritted teeth "> <" when compressed; spiral eyes above 3 m/s (recovers slowly);
+  "^ ^" + "wheee!" while held; star particles on fling. Blinks and particles use deterministic generators
+  so recordings are reproducible. "Serious mode" draws a plain block labeled m.
+- **Wheel = zoom** (mouse wheel and trackpad pinch, centered on the cursor); background drag pans;
+  double-click on empty background resets the view (a toolbar button does too).
+
 ## Planned (from the approved plan; detailed when implemented)
 
 - **Driving force**: option (a), a direct force F₀ cos ωt on the block; the crank is visual only. The ODE then

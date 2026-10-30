@@ -23,6 +23,11 @@ Spec: `prompt_claude_code_oscillator_multiverse.md`. Decisions log: `DECISIONS.m
 8. `src/i18n/` — `es.json`/`en.json`, `useT()`; core keys are type-checked.
 9. `src/state/uiStore.ts` — Zustand, UI state only. Per-frame sim state lives in a mutable controller.
 10. `src/presentation/` — 1920×1080 presentation stage and WebM recording.
+11. `src/runtime/SimController.ts` — binds a plugin's model + `SimulationLoop` + scene + `ViewTransform` to a canvas and runs rAF.
+
+Scene coordinates are meters: u along the oscillation, w across it (+w is down at angle 0). Physical objects
+size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on screen). Upright text goes in
+`drawOverlay` (CSS pixels).
 
 ## Conventions
 
@@ -30,7 +35,10 @@ Spec: `prompt_claude_code_oscillator_multiverse.md`. Decisions log: `DECISIONS.m
 - Physics is tested numerically (see spec §8). Never close a phase with red tests.
 - Hash routing (`#/<plugin-id>`) for GitHub Pages.
 - Colors/fonts only from `theme.ts` (CSS reads them as `--c-*`, `--f-*`, `--r-*`).
-- Tests reach into canvas state via `window.__osc` (dev/test only).
+- Tests reach into canvas state via `window.__osc` (dev/test only): `debug()`, `pageCoords(u, w)`, and the
+  controller methods (`setPausedState`, `play`...) for screenshot setups.
+- Timing-sensitive gestures (fling) are dispatched inside the page in e2e tests; Playwright's own latency can
+  look like "released still". Check flakiness with `npx playwright test --repeat-each=5`.
 - Models step state **in place** with preallocated buffers: no allocation in the hot loop.
 - Physics tests run at the slider extremes (`SHO_RANGES`, `DD_RANGES`); widen a range → the tests cover it.
 - Shared test helpers (`simulate`, `fitSinusoid`) live in `src/test/sim.ts`.
@@ -40,15 +48,19 @@ Spec: `prompt_claude_code_oscillator_multiverse.md`. Decisions log: `DECISIONS.m
 
 (Completed in Phase 4 with the SHO as the worked example.)
 
-1. Create `src/oscillators/<id>/` with `index.ts` exporting an `OscillatorPlugin` and `i18n/{es,en}.json`
-   (`title`, `short`, `tagline` at minimum).
-2. Add one line `registerPlugin(<yourPlugin>)` in `src/oscillators/registry.ts`.
+1. Write the physics in `src/models/<id>/model.ts` (an `odeModel` + `mechanicalKinematic` for a 1-DOF body)
+   with numerical tests next to it.
+2. Create `src/oscillators/<id>/` with `i18n/{es,en}.json` (`title`, `short`, `tagline` at minimum),
+   `scene.ts` (a `MechanicalScene`: bounds, update, draw, drawOverlay, hit, clampX, velocityFromHandle) and
+   `index.ts` exporting an `OscillatorPlugin` whose `sim` names the model, defaults and `createScene`.
+   See `src/oscillators/sho/` — reuse primitives from `src/render/scene/`.
+3. Add one line `registerPlugin(<yourPlugin>)` in `src/oscillators/registry.ts`.
 
 ## Phase status
 
 - [x] Phase 0 — Scaffolding (Vite/React/TS, lint, Vitest, Playwright, theme, tabs, i18n ES/EN)
 - [x] Phase 1 — Physics core (Model/odeModel, RK4, SimulationLoop, SHO + damped-driven, §8 tests)
-- [ ] Phase 2 — SHO scene
+- [x] Phase 2 — SHO scene (character block, helix spring, drag/fling/grab, v₀ arrow, toolbar, zoom/pan)
 - [ ] Phase 3 — Trace and plots
 - [ ] Phase 4 — Hover, popovers, ODE
 - [ ] Phase 5 — Damped driven oscillator
