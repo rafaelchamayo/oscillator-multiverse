@@ -171,7 +171,49 @@ test('screenshot sho ODE term hover + vertical gravity', async ({ page }) => {
   await page.screenshot({ path: 'e2e/screenshots/sho-ode-gravity.png' });
 });
 
-test('screenshot damped-driven-es (placeholder)', async ({ page }) => {
+test('screenshot damped-driven initial (es)', async ({ page }) => {
   await open(page, '/#/damped-driven', 'es');
-  await page.screenshot({ path: 'e2e/screenshots/damped-driven-es.png' });
+  await page.screenshot({ path: 'e2e/screenshots/dd-es.png' });
+});
+
+test('screenshot damped-driven resonance preset growing', async ({ page }) => {
+  await open(page, '/#/damped-driven', 'es');
+  await page.getByTestId('preset-resonance').click();
+  await sim(page, 's.loop.speed = 4;');
+  await page.waitForTimeout(4500);
+  await page.screenshot({ path: 'e2e/screenshots/dd-resonance.png' });
+});
+
+test('screenshot damped-driven force vectors + forces plot (en)', async ({ page }) => {
+  await open(page, '/#/damped-driven', 'en');
+  for (const id of ['vec.spring', 'vec.damper', 'vec.drive', 'vec.net', 'forces']) {
+    await page.getByTestId(`chip-${id}`).click();
+  }
+  await page.getByTestId('chip-resonance').click();
+  await sim(page, 's.setParam("b", 1.5); s.play();');
+  await page.waitForTimeout(2300);
+  await sim(page, 's.pause();');
+  await page.waitForTimeout(100);
+  await page.screenshot({ path: 'e2e/screenshots/dd-forces.png' });
+});
+
+test('screenshot damped-driven sweep points on the curve', async ({ page }) => {
+  await open(page, '/#/damped-driven', 'es');
+  await sim(page, 's.setParam("b", 1.2);');
+  await page.getByTestId('action-sweep').click();
+  // Run ~500 simulated seconds frame-locked inside the page (a real sweep takes minutes).
+  await sim(page, 's.play(); for (let i = 0; i < 30000; i++) s.loop.advanceFrame();');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: 'e2e/screenshots/dd-sweep.png' });
+});
+
+test('screenshot damped-driven honey + vertical', async ({ page }) => {
+  await open(page, '/#/damped-driven', 'es');
+  await page.getByTestId('perspective').click();
+  await sim(page, 's.setParam("b", 14); s.setParam("F0", 6); s.setParam("omega", 3); s.play();');
+  await page.waitForTimeout(2500);
+  const p = (await sim(page, 'return s.pageCoords(-1.0, -0.53);')) as { x: number; y: number };
+  await page.mouse.move(p.x, p.y);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: 'e2e/screenshots/dd-vertical-honey.png' });
 });

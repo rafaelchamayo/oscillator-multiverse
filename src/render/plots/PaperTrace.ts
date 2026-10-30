@@ -41,6 +41,8 @@ export interface PaperOptions {
   /** Meters per pixel for physical strokes. */
   ppx: number;
   showTrace: boolean;
+  /** Second series drawn dashed over the trace (e.g. the analytic steady state). */
+  overlayKey?: string;
 }
 
 /** Seconds between time lines on the paper. */
@@ -95,6 +97,21 @@ export function drawPaper(g: CanvasRenderingContext2D, o: PaperOptions): void {
     colors.highlight,
     3 * o.ppx,
   );
+
+  if (o.overlayKey && h.has(o.overlayKey)) {
+    const ov = h.get(o.overlayKey);
+    g.strokeStyle = alpha(colors.ink, 0.6);
+    g.lineWidth = 2 * o.ppx;
+    g.setLineDash([7 * o.ppx, 6 * o.ppx]);
+    g.beginPath();
+    for (let i = from; i <= to; i++) {
+      const u = ov.get(i);
+      if (i === from) g.moveTo(u, W(i));
+      else g.lineTo(u, W(i));
+    }
+    g.stroke();
+    g.setLineDash([]);
+  }
 }
 
 /** The pen nib under the body, touching the paper at (u, wTop). */

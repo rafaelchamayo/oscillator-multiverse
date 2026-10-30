@@ -1,5 +1,57 @@
 {
   "title": "Damped driven oscillator",
   "short": "Damped driven",
-  "tagline": "Friction, a motor and resonance: when to push to go higher."
+  "tagline": "Friction, a motor and resonance: when to push to go higher.",
+  "objects": {
+    "block": {
+      "title": "Block",
+      "desc": "Its mass m is inertia: how hard it is to accelerate (F = m ẍ). More mass → slower oscillation, and the damper slows it less."
+    },
+    "spring": {
+      "title": "Spring",
+      "desc": "Restoring force proportional to the stretch, F = −k x. Stiffer → higher natural frequency ω₀ = √(k/m)."
+    },
+    "damper": {
+      "title": "Damper",
+      "desc": "A piston in a fluid: a force opposing the velocity, F = −b ẋ. Water for low b, oil for medium b, honey for high b."
+    },
+    "motor": {
+      "title": "Crank motor",
+      "desc": "Pushes and pulls with F₀ cos(ω t). The crank radius shows the amplitude F₀/k and turns at ω. When ω nears ω₀: resonance!"
+    },
+    "wall": {
+      "title": "Frame",
+      "desc": "Fixed structure holding the motor and the damper tube. It never moves."
+    },
+    "velocity": {
+      "title": "Velocity",
+      "desc": "The arrow shows the velocity v. While paused, drag its tip to choose v₀."
+    }
+  },
+  "params": {
+    "m": "Mass",
+    "k": "Spring constant",
+    "b": "Damping",
+    "F0": "Motor force",
+    "omega": "Motor frequency"
+  },
+  "info": {
+    "natural": "ω₀ = {w} rad/s · γ = {g} s⁻¹",
+    "damping": "γ = b/2m = {g} s⁻¹ · ω₀ = {w} rad/s",
+    "drive": "Steady amplitude = {A} m · ω_res = {wr} rad/s"
+  },
+  "regime": {
+    "undamped": "Undamped",
+    "underdamped": "Underdamped",
+    "critical": "Critically damped",
+    "overdamped": "Overdamped"
+  },
+  "presets": {
+    "undamped": "Undamped",
+    "underdamped": "Underdamped",
+    "critical": "Critical",
+    "overdamped": "Overdamped",
+    "resonance": "Resonance",
+    "beats": "Beats"
+  }
 }

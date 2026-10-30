@@ -46,6 +46,22 @@ export const series = {
   label: '#AEB4C2',
 } as const;
 
+/** Force vectors (on paper and in the force plot): one hue per physical cause. */
+export const forces = {
+  spring: '#12A39D',
+  damper: '#8B5CF6',
+  drive: '#E8A317',
+  gravity: '#8A909C',
+  net: '#E5484D',
+} as const;
+
+/** Dashpot fluid by damping: water → oil → honey (rgb + opacity). */
+export const fluids = {
+  water: { rgb: [124, 200, 245], a: 0.32 },
+  oil: { rgb: [139, 92, 246], a: 0.5 },
+  honey: { rgb: [224, 165, 38], a: 0.82 },
+} as const;
+
 export const fonts = {
   display: "'Fredoka', 'Baloo 2', system-ui, sans-serif",
   ui: "'Inter', system-ui, -apple-system, sans-serif",

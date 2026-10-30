@@ -2,6 +2,7 @@ import { formatNumber } from '../../core/units';
 import { fonts, series as S } from '../theme';
 import { AutoScale, niceStep } from './AutoScale';
 import {
+  drawIdle,
   drawTag,
   drawValueGrid,
   minMax,
@@ -23,21 +24,24 @@ export class TimePlot implements Plot {
   constructor(
     private readonly series: SeriesDef[],
     private readonly mode: 'lanes' | 'overlay',
-    opts: { minSpan?: number; includeZero?: boolean } = {},
+    private readonly opts: { minSpan?: number; includeZero?: boolean } = {},
   ) {
-    for (const s of series) this.scales.set(s.key, new AutoScale({ minSpan: opts.minSpan ?? 0.1 }));
     this.shared = new AutoScale({ minSpan: opts.minSpan ?? 0.1, includeZero: opts.includeZero });
   }
 
   reset(): void {
-    for (const s of this.scales.values()) s.reset();
+    this.scales.clear();
     this.shared.reset();
   }
 
   draw(g: CanvasRenderingContext2D, width: number, height: number, ctx: PlotCtx): void {
     const h = ctx.history;
     const shown = this.series.filter((s) => !s.chip || ctx.chips[s.chip]);
-    if (shown.length === 0 || h.length < 2) return;
+    if (shown.length === 0) return;
+    if (h.length < 2) {
+      drawIdle(g, width, height, ctx);
+      return;
+    }
 
     const left = 46;
     const right = 12;
@@ -54,10 +58,25 @@ export class TimePlot implements Plot {
 
     const lanes: { rect: Rect; series: SeriesDef[]; scale: AutoScale }[] = [];
     if (this.mode === 'lanes') {
-      const laneH = (height - top - bottom - gap * (shown.length - 1)) / shown.length;
-      shown.forEach((s, k) => {
+      // Series sharing a `lane` id share a lane and its scale (e.g. x and its steady state).
+      const groups = new Map<string, SeriesDef[]>();
+      for (const s of shown) {
+        const id = s.lane ?? s.key;
+        groups.set(id, [...(groups.get(id) ?? []), s]);
+      }
+      const n = groups.size;
+      const laneH = (height - top - bottom - gap * (n - 1)) / n;
+      [...groups].forEach(([id, ss], k) => {
         const rect = { x: left, y: top + k * (laneH + gap), w: plotW, h: laneH };
-        lanes.push({ rect, series: [s], scale: this.scales.get(s.key)! });
+        let scale = this.scales.get(id);
+        if (!scale) {
+          scale = new AutoScale({
+            minSpan: this.opts.minSpan ?? 0.1,
+            includeZero: this.opts.includeZero,
+          });
+          this.scales.set(id, scale);
+        }
+        lanes.push({ rect, series: ss, scale });
       });
     } else {
       lanes.push({
@@ -86,17 +105,35 @@ export class TimePlot implements Plot {
       for (const s of lane.series) {
         const rb = h.get(s.key);
         const Y = (i: number) => r.y + r.h - lane.scale.frac(rb.get(i)) * r.h;
-        strokeFading(g, from, to, X, Y, age, manual, s.color, S.manual, 2);
+        if (s.dash) {
+          g.strokeStyle = s.color;
+          g.lineWidth = 1.6;
+          g.setLineDash([5, 4]);
+          g.beginPath();
+          for (let i = from; i <= to; i++) {
+            if (i === from) g.moveTo(X(i), Y(i));
+            else g.lineTo(X(i), Y(i));
+          }
+          g.stroke();
+          g.setLineDash([]);
+        } else {
+          strokeFading(g, from, to, X, Y, age, manual, s.color, S.manual, 2);
+        }
       }
       g.restore();
 
       if (this.mode === 'lanes') {
-        const s = lane.series[0]!;
         g.font = `600 11px ${fonts.mono}`;
-        g.fillStyle = s.color;
         g.textAlign = 'left';
         g.textBaseline = 'top';
-        g.fillText(`${s.label} (${s.unit})`, r.x + 6, r.y + 4);
+        let lx = r.x + 6;
+        for (const s of lane.series) {
+          g.fillStyle = s.color;
+          g.fillText(s.label, lx, r.y + 4);
+          lx += g.measureText(s.label).width + 8;
+        }
+        g.fillStyle = lane.series.length > 1 ? S.label : lane.series[0]!.color;
+        g.fillText(`(${lane.series[0]!.unit})`, lx, r.y + 4);
       }
     }
 
@@ -126,7 +163,7 @@ export class TimePlot implements Plot {
             g.beginPath();
             g.arc(x, y, 3.5, 0, Math.PI * 2);
             g.fill();
-            const tagY = this.mode === 'overlay' ? lane.rect.y + 4 + k * 21 : lane.rect.y + 2;
+            const tagY = lane.rect.y + (this.mode === 'overlay' ? 4 : 2) + k * 21;
             drawTag(g, x + 8, tagY, `${s.label} = ${formatNumber(v)} ${s.unit}`, s.color, bounds);
           });
         }

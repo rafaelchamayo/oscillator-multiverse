@@ -1,6 +1,7 @@
 import { fmtCoef } from '../latex';
 import { mechanicalKinematic } from '../mechanical';
 import { odeModel } from '../ode';
+import { steadyPosition } from './analytic';
 import type { MechanicalInit, OdeTerm } from '../types';
 
 /**
@@ -68,6 +69,14 @@ export const dampedDrivenModel = odeModel<
       out.K = K;
       out.U = U;
       out.E = K + U;
+      // Energy of the oscillation, measured from the equilibrium (see SHO).
+      const u = x + (p.m * p.g) / p.k;
+      out.Ueq = 0.5 * p.k * u * u;
+      out.Eeq = K + out.Ueq;
+      // Analytic steady state for the current params, and the transient as what is left.
+      const xss = steadyPosition(p, t);
+      out.xss = xss;
+      out.xtr = x - xss;
       out.Fspring = Fspring;
       out.Fdamp = Fdamp;
       out.Fdrive = Fdrive;

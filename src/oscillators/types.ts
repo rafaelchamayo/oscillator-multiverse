@@ -23,10 +23,42 @@ export interface MechanicalSimSpec<P> {
   panels: PanelDef[];
   /** Interactive objects of the scene: hover glow, popover (description + sliders), ODE terms. */
   objects: ObjectDef[];
+  /** Per-controller helpers shared by panels (e.g. the resonance sweep). */
+  createExtras?(api: SimApi): SimExtras;
+  /** Small buttons that load a configuration (params, initial condition, chips) and play. */
+  presets?: PresetDef[];
+  /** Badge next to the ODE (e.g. the damping regime). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  badge?(params: any): { key: TKey; tone: 'neutral' | 'info' | 'warn' | 'good' } | null;
   /** Present when the model supports the vertical view with gravity. */
   setGravity?(params: P, g: number): void;
   /** Rest position of the body for these params (where the gravity sag puts it). */
   equilibrium?(params: P): number;
+}
+
+/** What extras may do to the simulation. */
+export interface SimApi {
+  setParam(key: string, value: number): void;
+}
+
+export interface SimExtras {
+  /** Called for every history sample. */
+  onSample?(
+    t: number,
+    obs: Record<string, number>,
+    params: Record<string, number>,
+    manual: boolean,
+  ): void;
+  onReset?(): void;
+}
+
+export interface PresetDef {
+  id: string;
+  labelKey: TKey;
+  params: Record<string, number>;
+  /** x₀ measured from the equilibrium, and v₀. */
+  init: MechanicalInit;
+  chips?: Record<string, boolean>;
 }
 
 /**
@@ -60,13 +92,29 @@ export interface ChipDef {
   defaultOn: boolean;
   /** Dot color in the chip. */
   color: string;
+  /** `vectors` chips toggle force arrows on the block instead of plots. */
+  group?: 'plots' | 'vectors';
+}
+
+export interface PanelAction {
+  id: string;
+  labelKey: TKey;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  run(extras: any, params: any): void;
+  /** Shown pressed while true. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  active?(extras: any): boolean;
 }
 
 export interface PanelDef {
   id: string;
   titleKey: TKey;
   chips: string[];
-  create(): Plot;
+  /** `extras` is what the plugin's `createExtras` returned (undefined without it). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  create(extras: any): Plot;
+  /** Small buttons in the panel's title row. */
+  actions?: PanelAction[];
   /** Height weight in the stacked panel (default 1). */
   weight?: number;
 }

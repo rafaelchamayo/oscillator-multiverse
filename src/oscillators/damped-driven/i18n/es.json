@@ -1,5 +1,57 @@
 {
   "title": "Oscilador forzado amortiguado",
   "short": "Forzado amortiguado",
-  "tagline": "Fricción, un motor y la resonancia: cuándo empujar para llegar más alto."
+  "tagline": "Fricción, un motor y la resonancia: cuándo empujar para llegar más alto.",
+  "objects": {
+    "block": {
+      "title": "Bloque",
+      "desc": "Su masa m es la inercia: cuánto le cuesta acelerar (F = m ẍ). Más masa → oscila más lento y el amortiguador la frena menos."
+    },
+    "spring": {
+      "title": "Resorte",
+      "desc": "Fuerza restauradora proporcional al estiramiento, F = −k x. Más rígido → frecuencia natural ω₀ = √(k/m) mayor."
+    },
+    "damper": {
+      "title": "Amortiguador",
+      "desc": "Un pistón en un fluido: fuerza que se opone a la velocidad, F = −b ẋ. Agua con b bajo, aceite con b medio, miel con b alto."
+    },
+    "motor": {
+      "title": "Motor con biela",
+      "desc": "Empuja y tira con F₀ cos(ω t). El radio de la manivela muestra la amplitud F₀/k y gira a ω. Si ω se acerca a ω₀, ¡resonancia!"
+    },
+    "wall": {
+      "title": "Bastidor",
+      "desc": "Estructura fija: sostiene el motor y el tubo del amortiguador. No se mueve."
+    },
+    "velocity": {
+      "title": "Velocidad",
+      "desc": "La flecha muestra la velocidad v. En pausa, arrastra su punta para elegir v₀."
+    }
+  },
+  "params": {
+    "m": "Masa",
+    "k": "Constante del resorte",
+    "b": "Amortiguamiento",
+    "F0": "Fuerza del motor",
+    "omega": "Frecuencia del motor"
+  },
+  "info": {
+    "natural": "ω₀ = {w} rad/s · γ = {g} s⁻¹",
+    "damping": "γ = b/2m = {g} s⁻¹ · ω₀ = {w} rad/s",
+    "drive": "A estacionaria = {A} m · ω_res = {wr} rad/s"
+  },
+  "regime": {
+    "undamped": "Sin amortiguar",
+    "underdamped": "Subamortiguado",
+    "critical": "Amortiguamiento crítico",
+    "overdamped": "Sobreamortiguado"
+  },
+  "presets": {
+    "undamped": "Sin amortiguar",
+    "underdamped": "Subamortiguado",
+    "critical": "Crítico",
+    "overdamped": "Sobreamortiguado",
+    "resonance": "Resonancia",
+    "beats": "Pulsaciones"
+  }
 }

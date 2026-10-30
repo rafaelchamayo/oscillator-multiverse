@@ -26,6 +26,8 @@ export class ViewTransform {
   angle = 0;
   /** Screen pixels at the bottom covered by floating UI (toolbar): fit and center above them. */
   insetBottom = 0;
+  /** Same at the top (equation card). */
+  insetTop = 0;
   focus: Vec2 = { x: 0, y: 0 };
   private bounds: SceneBounds = { uMin: -1, uMax: 1, wMin: -1, wMax: 1 };
 
@@ -59,7 +61,7 @@ export class ViewTransform {
     const avail = 1 - 2 * margin;
     this.fitScale = Math.min(
       (this.width * avail) / sw,
-      ((this.height - this.insetBottom) * avail) / sh,
+      ((this.height - this.insetTop - this.insetBottom) * avail) / sh,
     );
     this.focus = { x: (b.uMin + b.uMax) / 2, y: (b.wMin + b.wMax) / 2 };
   }
@@ -88,7 +90,7 @@ export class ViewTransform {
   }
 
   private get centerY(): number {
-    return (this.height - this.insetBottom) / 2;
+    return this.insetTop + (this.height - this.insetTop - this.insetBottom) / 2;
   }
 
   toScreen(u: number, w: number): Vec2 {

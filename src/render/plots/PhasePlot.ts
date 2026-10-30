@@ -1,7 +1,7 @@
 import { formatNumber } from '../../core/units';
 import { fonts, series as S } from '../theme';
 import { AutoScale, niceStep } from './AutoScale';
-import { drawTag, visibleRange } from './draw';
+import { drawIdle, drawTag, visibleRange } from './draw';
 import type { Plot, PlotCtx } from './types';
 
 const OLD = [124, 77, 255]; // violet
@@ -24,6 +24,12 @@ export class PhasePlot implements Plot {
     private readonly xKey: string,
     private readonly vKey: string,
     private readonly labels: { x: string; v: string; xUnit: string; vUnit: string },
+    private readonly opts: {
+      /** Seconds of history in the trail (default: twice the trace window). */
+      span?: number;
+      /** Limit cycle drawn dashed: ellipse centered at (cx, 0) with semi-axes a (x) and b (v). */
+      limit?: (params: Record<string, number>) => { cx: number; a: number; b: number } | null;
+    } = {},
   ) {}
 
   reset(): void {
@@ -33,11 +39,15 @@ export class PhasePlot implements Plot {
 
   draw(g: CanvasRenderingContext2D, width: number, height: number, ctx: PlotCtx): void {
     const h = ctx.history;
-    if (h.length < 2) return;
+    if (h.length < 2) {
+      drawIdle(g, width, height, ctx);
+      return;
+    }
     const pad = { l: 46, r: 14, t: 10, b: 24 };
     const w = width - pad.l - pad.r;
     const hh = height - pad.t - pad.b;
-    const [from, to] = visibleRange(h, ctx.t - ctx.window * 2, ctx.t);
+    const [from, to] = visibleRange(h, ctx.t - (this.opts.span ?? ctx.window * 2), ctx.t);
+    const lim = this.opts.limit?.(ctx.params) ?? null;
     const xr = h.get(this.xKey);
     const vr = h.get(this.vKey);
 
@@ -51,12 +61,36 @@ export class PhasePlot implements Plot {
       vlo = Math.min(vlo, vr.get(i));
       vhi = Math.max(vhi, vr.get(i));
     }
+    if (lim && Number.isFinite(lim.a) && Number.isFinite(lim.b)) {
+      xlo = Math.min(xlo, lim.cx - lim.a);
+      xhi = Math.max(xhi, lim.cx + lim.a);
+      vlo = Math.min(vlo, -lim.b);
+      vhi = Math.max(vhi, lim.b);
+    }
     this.xs.update(xlo, xhi, ctx.dt);
     this.vs.update(vlo, vhi, ctx.dt);
     const X = (x: number) => pad.l + this.xs.frac(x) * w;
     const Y = (v: number) => pad.t + hh - this.vs.frac(v) * hh;
 
     this.drawAxes(g, pad, w, hh);
+
+    // Limit cycle (steady state), dashed, under the trail.
+    if (lim && Number.isFinite(lim.a) && Number.isFinite(lim.b)) {
+      g.save();
+      g.strokeStyle = 'rgba(243,244,248,0.45)';
+      g.lineWidth = 1.4;
+      g.setLineDash([5, 5]);
+      g.beginPath();
+      for (let k = 0; k <= 96; k++) {
+        const th = (k / 96) * Math.PI * 2;
+        const px = X(lim.cx + lim.a * Math.cos(th));
+        const py = Y(-lim.b * Math.sin(th));
+        if (k === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
+      }
+      g.stroke();
+      g.restore();
+    }
 
     // Trail: wide translucent glow, then a thin bright line, colored by age.
     const n = to - from;

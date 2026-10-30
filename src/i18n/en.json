@@ -38,17 +38,38 @@
       "v": "v(t)",
       "a": "a(t)",
       "energy": "Energy",
-      "phase": "Phase"
+      "phase": "Phase",
+      "ss": "Steady / transient",
+      "forces": "Forces",
+      "resonance": "Resonance"
     },
     "panels": {
       "motion": "Motion",
       "energy": "Energy",
-      "phase": "Phase space"
+      "phase": "Phase space",
+      "forces": "Forces",
+      "resonance": "Resonance curve"
     },
     "empty": "Turn on a plot with the chips above.",
     "window": "{s} s",
     "time": "t (s)",
-    "manual": "hand-driven"
+    "manual": "hand-driven",
+    "vectors": "Vectors",
+    "vec": {
+      "spring": "−kx",
+      "damper": "−bẋ",
+      "drive": "F(t)",
+      "gravity": "−mg",
+      "net": "ΣF"
+    },
+    "resonance": {
+      "auto": "Auto sweep",
+      "clear": "Clear",
+      "sweeping": "sweeping… {n} pts",
+      "steady": "steady ✓",
+      "waiting": "waiting for steady state…"
+    },
+    "idle": "▶ Press play to start plotting"
   },
   "ode": {
     "label": "Equation of motion",
@@ -56,5 +77,8 @@
   },
   "popover": {
     "close": "Close"
+  },
+  "presets": {
+    "label": "Presets"
   }
 }

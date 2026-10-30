@@ -3,7 +3,7 @@ import { SPEEDS, SimulationLoop } from '../core/sim/SimulationLoop';
 import { translate, type TKey } from '../i18n/dict';
 import { G_EARTH } from '../models/mechanical';
 import type { MechanicalInit, Observables } from '../models/types';
-import type { MechanicalSimSpec } from '../oscillators/types';
+import type { MechanicalSimSpec, SimExtras } from '../oscillators/types';
 import { fitCanvas } from '../render/canvas';
 import type { Plot, PlotCtx } from '../render/plots/types';
 import type { FrameInfo, MechanicalScene } from '../render/scene/types';
@@ -34,6 +34,8 @@ export class SimController<P> {
   readonly view = new ViewTransform();
   readonly scene: MechanicalScene<P>;
   readonly history: History;
+  /** The plugin's helpers (resonance sweep...), fed with every history sample. */
+  readonly extras: SimExtras | undefined;
   /** Conditions restored by Reset; updated whenever the user edits x₀ or v₀. */
   ic: MechanicalInit;
   /** Object under the canvas pointer. */
@@ -72,6 +74,7 @@ export class SimController<P> {
   constructor(readonly spec: MechanicalSimSpec<P>) {
     this.ic = { ...spec.defaultInit };
     this.scene = spec.createScene();
+    this.extras = spec.createExtras?.({ setParam: (k, v) => this.setParam(k, v) });
     this.history = new History(
       spec.historyKeys,
       (HISTORY_SECONDS * 600) / SAMPLE_EVERY,
@@ -83,7 +86,14 @@ export class SimController<P> {
       state: spec.model.createState(spec.defaultParams, this.ic),
       onStep: ({ t, state, manual }) => {
         spec.model.observables(state, this.loop.params, t, this.stepObs);
-        this.history.offer(t, this.stepObs, manual);
+        if (this.history.offer(t, this.stepObs, manual)) {
+          this.extras?.onSample?.(
+            t,
+            this.stepObs,
+            this.loop.params as Record<string, number>,
+            manual,
+          );
+        }
       },
     });
     // Chips start at their defaults unless the user already chose for this plugin.
@@ -166,9 +176,26 @@ export class SimController<P> {
     this.holdTarget = null;
     this.loop.reset(this.spec.model.createState(this.params, this.ic));
     this.history.clear();
+    this.extras?.onReset?.();
     for (const s of this.plots.values()) s.plot.reset?.();
     this.recordNow();
     this.syncStore();
+  }
+
+  /** Loads a preset: its params (gravity stays as the view says), x₀ from equilibrium, chips. */
+  applyPreset(id: string): void {
+    const preset = this.spec.presets?.find((p) => p.id === id);
+    if (!preset) return;
+    const params = this.params as Record<string, number>;
+    Object.assign(params, preset.params);
+    if (Number.isFinite(this.gravity)) this.spec.setGravity?.(this.params, this.gravity);
+    const eq = this.spec.equilibrium?.(this.params) ?? 0;
+    this.ic = { x0: eq + preset.init.x0, v0: preset.init.v0 };
+    if (preset.chips) {
+      useSimStore.setState((s) => ({ chips: { ...s.chips, ...preset.chips } }));
+    }
+    this.reset();
+    this.play();
   }
 
   cycleSpeed(): void {
@@ -318,6 +345,8 @@ export class SimController<P> {
     this.view.width = rect.width;
     this.view.height = rect.height;
     this.view.insetBottom = SimController.TOOLBAR_INSET;
+    // ODE card on top, plus the presets row when there is one.
+    this.view.insetTop = this.spec.presets ? 112 : 70;
     this.view.fitSmooth(this.scene.bounds(this.frameInfo(0)), 0, true);
   }
 
@@ -369,6 +398,7 @@ export class SimController<P> {
         chips: f.chips,
         hover: slot.hover,
         dt: realDt,
+        params: this.params as Record<string, number>,
         tr: f.tr,
       };
       slot.plot.draw(pg, rect.width, rect.height, ctx);

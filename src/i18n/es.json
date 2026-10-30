@@ -38,17 +38,38 @@
       "v": "v(t)",
       "a": "a(t)",
       "energy": "Energía",
-      "phase": "Fases"
+      "phase": "Fases",
+      "ss": "Estacionario / transitorio",
+      "forces": "Fuerzas",
+      "resonance": "Resonancia"
     },
     "panels": {
       "motion": "Movimiento",
       "energy": "Energía",
-      "phase": "Espacio de fases"
+      "phase": "Espacio de fases",
+      "forces": "Fuerzas",
+      "resonance": "Curva de resonancia"
     },
     "empty": "Activa una gráfica con los chips de arriba.",
     "window": "{s} s",
     "time": "t (s)",
-    "manual": "tramo a mano"
+    "manual": "tramo a mano",
+    "vectors": "Vectores",
+    "vec": {
+      "spring": "−kx",
+      "damper": "−bẋ",
+      "drive": "F(t)",
+      "gravity": "−mg",
+      "net": "ΣF"
+    },
+    "resonance": {
+      "auto": "Barrido auto",
+      "clear": "Borrar",
+      "sweeping": "barriendo… {n} pts",
+      "steady": "estacionario ✓",
+      "waiting": "esperando estacionario…"
+    },
+    "idle": "▶ Reproduce para empezar a graficar"
   },
   "ode": {
     "label": "Ecuación de movimiento",
@@ -56,5 +77,8 @@
   },
   "popover": {
     "close": "Cerrar"
+  },
+  "presets": {
+    "label": "Configuraciones"
   }
 }

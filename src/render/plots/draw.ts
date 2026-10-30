@@ -126,3 +126,17 @@ export function nearestIndex(h: History, t: number): number {
   if (i >= h.length) return h.length - 1;
   return t - h.t.get(i - 1) < h.t.get(i) - t ? i - 1 : i;
 }
+
+/** Placeholder while there is nothing to plot yet (paused at t = 0). */
+export function drawIdle(
+  g: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  ctx: { tr: (key: 'plots.idle') => string },
+): void {
+  g.font = `500 12px ${fonts.ui}`;
+  g.fillStyle = S.label;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText(ctx.tr('plots.idle'), width / 2, height / 2);
+}

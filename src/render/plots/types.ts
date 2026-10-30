@@ -12,6 +12,8 @@ export interface PlotCtx {
   hover: { x: number; y: number } | null;
   /** Real seconds since the last frame (for smooth autoscale). */
   dt: number;
+  /** Current model parameters (analytic overlays). */
+  params: Record<string, number>;
   tr: (key: TKey, vars?: Record<string, string | number>) => string;
 }
 
@@ -29,4 +31,8 @@ export interface SeriesDef {
   label: string;
   unit: string;
   color: string;
+  /** Lane id in `lanes` mode: series with the same id share a lane (default: own lane). */
+  lane?: string;
+  /** Drawn dashed (analytic references such as the steady state). */
+  dash?: boolean;
 }

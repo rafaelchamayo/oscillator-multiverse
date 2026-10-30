@@ -107,10 +107,37 @@ Minor, reversible decisions taken during implementation, and why.
   The gravity term belongs to the block (the weight acts on it).
 - The block's popover replaces the v₀ tag while it is open (they would overlap).
 
+## Phase 5 — Damped driven oscillator
+
+- **Drive (option a, as planned) with an exact picture**: the model applies F₀ cos ωt to the block. The crank
+  radius is A = F₀/k and the slider holding the spring's end moves A cos ωt, which is option (b)'s moving anchor;
+  its force kA cos ωt equals F₀ cos ωt, so the ODE and the drawing agree. The radius is capped at 0.12 m to fit
+  the wheel (beyond that the picture is schematic).
+- **No face on the motor**: the spec asked for a straining motor face, but the owner asked for no faces on
+  objects. The effort shows as a warm glow around the wheel that grows with F₀.
+- **Dashpot above the track**: a fluid tube fixed to the frame; an arm from the block's top drags the piston, so
+  it fits every mass. Fluid goes water → oil → honey with log(1 + b); bubbles near the piston move against its
+  velocity, slower in thicker fluid. The frame moves left (−1.85 m) to make room for the motor.
+- **Shared scene**: the SHO scene became `createSpringBlockScene` (`src/oscillators/shared/`); tabs add parts
+  (dashpot, motor), force vectors and a dashed paper overlay through its config.
+- **Force vectors**: one row each across the block, a common scale that follows the largest visible force
+  (grows at once, shrinks slowly), labels at the tips. Each one has its own chip ("Vectores").
+- **Transient vs steady**: x_ss is the analytic steady state for the current params; x_tr = x − x_ss. With
+  b = 0 the steady state is the particular solution, and the "transient" never dies (as it should).
+- **Resonance sweep, measured like in a lab**: the amplitude comes from consecutive extrema (parabolic
+  refinement). A point is recorded once the time since the last change reaches the 0.5% settling time from
+  the analytic decay rate, and the last four half-cycle amplitudes agree within 0.2%. The automatic sweep
+  covers 0.3 ω₀ to 2.2 ω₀ in 25 points. Changing m, k, b, F₀ or g clears the points (another oscillator).
+  Verified: points fall within 1% of A(ω) (unit test and e2e).
+- **Presets** (m = 1 kg, k = 4 N/m, ω₀ = 2 rad/s): undamped b = 0; underdamped b = 0.4; critical b = 4;
+  overdamped b = 10 (all unforced, x₀ = 0.5 m); resonance b = 0.2, F₀ = 0.3 N, ω = ω_res ≈ 1.995 rad/s from
+  rest (grows to ≈ 0.75 m); beats b = 0, F₀ = 0.3 N, ω = 1.8 rad/s from rest. Presets play immediately.
+- **Regime badge**: "critical" is a ±2% band around γ = ω₀, so it can be reached with the slider.
+- **Energy panel**: K, U, E (from equilibrium) in one lane, motor power F·v and dissipated power b v² in another.
+  The phase plot keeps 40 s of trail and draws the steady ellipse (semi-axes A and ωA) dashed.
+
 ## Planned (from the approved plan; detailed when implemented)
 
-- **Driving force**: option (a), a direct force F₀ cos ωt on the block; the crank is visual only. The ODE then
-  matches exactly what is drawn.
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by
   the same RK4 step.
 - **Recording**: `captureStream()` does not capture DOM, so presentation mode composes scene, plots and the

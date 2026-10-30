@@ -61,7 +61,9 @@ The SHO (`src/oscillators/sho/`) is the worked example.
    hoverable `objects` (ODE terms + sliders; texts at `objects.<id>.{title,desc}` in the plugin i18n), the
    `historyKeys`, `chips` and `panels`. The scene's `hit` ids must match the object ids, and `objectBox`
    tells the popover where the object is.
-   See `src/oscillators/sho/` — reuse primitives from `src/render/scene/`.
+   See `src/oscillators/sho/` (plain) and `src/oscillators/damped-driven/` (extra scene parts, force
+   vectors, presets, badge, `createExtras` for the resonance sweep). Spring-block tabs build their scene with
+   `createSpringBlockScene` (`src/oscillators/shared/`); reuse primitives from `src/render/scene/`.
 3. Add one line `registerPlugin(<yourPlugin>)` in `src/oscillators/registry.ts`.
 
 ## Phase status
@@ -71,5 +73,5 @@ The SHO (`src/oscillators/sho/`) is the worked example.
 - [x] Phase 2 — SHO scene (metal block with squash & stretch, helix spring, drag/fling/grab, v₀ arrow, toolbar, zoom/pan; light sketchbook theme)
 - [x] Phase 3 — Trace and plots (paper trace, side-panel plots with chips, vertical view + gravity)
 - [x] Phase 4 — Hover, popovers, ODE (object popovers with the only sliders, live KaTeX ODE, term↔object highlight)
-- [ ] Phase 5 — Damped driven oscillator
+- [x] Phase 5 — Damped driven oscillator (dashpot, crank motor, force vectors, regime badge, steady/transient, resonance sweep, presets)
 - [ ] Phase 6 — Presentation mode and polish

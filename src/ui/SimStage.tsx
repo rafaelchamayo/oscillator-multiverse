@@ -6,6 +6,7 @@ import { SimController } from '../runtime/SimController';
 import { ObjectPopover } from './ObjectPopover';
 import { OdeView } from './OdeView';
 import { PlotPanel } from './PlotPanel';
+import { Presets } from './Presets';
 import { Toolbar } from './Toolbar';
 import { useShortcuts } from './useShortcuts';
 
@@ -45,7 +46,10 @@ export function SimStage({ plugin }: Props) {
       <section className="stage stage--sim">
         <h1 className="sr-only">{t(`osc.${plugin.id}.title`)}</h1>
         <canvas ref={canvasRef} className="stage__canvas" data-testid="stage-canvas" />
-        <OdeView sim={sim} />
+        <div className="stage-top">
+          <OdeView sim={sim} />
+          <Presets sim={sim} />
+        </div>
         <ObjectPopover sim={sim} pluginId={plugin.id} />
         <Toolbar sim={sim} />
       </section>

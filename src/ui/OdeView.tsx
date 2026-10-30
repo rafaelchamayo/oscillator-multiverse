@@ -37,6 +37,7 @@ export function OdeView({ sim }: Props) {
     });
   }, [sim, params]);
 
+  const badge = sim.spec.badge?.(params) ?? null;
   const lit = sim.spec.objects.find((o) => o.id === highlightId)?.terms ?? [];
   const litKey = lit.join(' ');
   const ref = useRef<HTMLDivElement>(null);
@@ -67,6 +68,11 @@ export function OdeView({ sim }: Props) {
         onPointerLeave={() => sim.setTermHover(null)}
         dangerouslySetInnerHTML={{ __html: html }}
       />
+      {badge && (
+        <span className={`ode__badge ode__badge--${badge.tone}`} data-testid="regime">
+          {t(badge.key)}
+        </span>
+      )}
     </div>
   );
 }
