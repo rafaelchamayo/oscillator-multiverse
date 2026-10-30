@@ -50,6 +50,8 @@ export interface Scene<S, P> {
   /** Draw upright text/labels in CSS-pixel screen coordinates. */
   drawOverlay?(g: CanvasRenderingContext2D, f: FrameInfo<S, P>): void;
   hit(pt: Vec2, f: FrameInfo<S, P>): Hit | null;
+  /** Scene box of an object, so its popover can sit beside it; null if not shown. */
+  objectBox?(objectId: string, f: FrameInfo<S, P>): SceneBounds | null;
   /** Notifies a fling (release with speed) for particle effects. */
   onFling?(v: number, f: FrameInfo<S, P>): void;
 }

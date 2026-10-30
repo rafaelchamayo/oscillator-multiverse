@@ -49,5 +49,12 @@
     "window": "{s} s",
     "time": "t (s)",
     "manual": "tramo a mano"
+  },
+  "ode": {
+    "label": "Ecuación de movimiento",
+    "hint": "Pasa el mouse por un término para ver qué objeto lo produce"
+  },
+  "popover": {
+    "close": "Cerrar"
   }
 }

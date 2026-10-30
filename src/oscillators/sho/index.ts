@@ -1,4 +1,12 @@
-import { shoModel, SHO_DEFAULTS, type ShoParams } from '../../models/sho/model';
+import { formatNumber } from '../../core/units';
+import {
+  shoModel,
+  shoOmega0,
+  shoPeriod,
+  SHO_DEFAULTS,
+  SHO_RANGES,
+  type ShoParams,
+} from '../../models/sho/model';
 import { PhasePlot } from '../../render/plots/PhasePlot';
 import { TimePlot } from '../../render/plots/TimePlot';
 import { series as S } from '../../render/theme';
@@ -6,6 +14,12 @@ import type { OscillatorPlugin } from '../types';
 import es from './i18n/es.json';
 import en from './i18n/en.json';
 import { createShoScene, MAX_SPEED } from './scene';
+
+/** ω₀ and T under the m and k sliders: what the slider is changing. */
+const info = {
+  key: 'osc.sho.derived' as const,
+  vars: (p: ShoParams) => ({ w: formatNumber(shoOmega0(p)), T: formatNumber(shoPeriod(p)) }),
+};
 
 export const shoPlugin: OscillatorPlugin = {
   id: 'sho',
@@ -18,6 +32,22 @@ export const shoPlugin: OscillatorPlugin = {
     defaultInit: { x0: 0.5, v0: 0 },
     maxSpeed: MAX_SPEED,
     createScene: createShoScene,
+    objects: [
+      {
+        id: 'block',
+        terms: ['mass', 'gravity'],
+        params: [{ key: 'm', symbol: 'm', unit: 'kg', ...SHO_RANGES.m, digits: 1 }],
+        info,
+      },
+      {
+        id: 'spring',
+        terms: ['spring'],
+        params: [{ key: 'k', symbol: 'k', unit: 'N/m', ...SHO_RANGES.k, digits: 1 }],
+        info,
+      },
+      { id: 'wall', terms: [], params: [] },
+      { id: 'velocity', terms: [], params: [] },
+    ],
     historyKeys: ['x', 'v', 'a', 'K', 'Ueq', 'Eeq'],
     chips: [
       { id: 'x', labelKey: 'plots.chips.x', defaultOn: true, color: S.x },

@@ -472,3 +472,163 @@ button {
   width: 100%;
   cursor: crosshair;
 }
+
+/* Equation of motion (top of the stage) */
+.ode {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 22px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  border: var(--ink-width) solid var(--c-border);
+  box-shadow: 0 4px 0 0 color-mix(in srgb, var(--c-ink) 10%, transparent);
+  font-size: 19px;
+  color: var(--c-text);
+}
+
+.ode .katex-display {
+  margin: 8px 0;
+}
+
+.ode .term {
+  cursor: help;
+  border-radius: 6px;
+  transition:
+    color var(--t-fast) var(--ease-out),
+    text-shadow var(--t-normal) var(--ease-out);
+}
+
+.ode .term-lit {
+  color: var(--c-highlight);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--c-highlight) 45%, transparent);
+}
+
+/* Object popover (positioned by the controller every frame) */
+.popover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: 290px;
+  padding: 14px 16px 12px;
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  border: var(--ink-width) solid var(--c-border);
+  box-shadow:
+    0 5px 0 0 color-mix(in srgb, var(--c-ink) 12%, transparent),
+    var(--glow-highlight);
+  animation: pop var(--t-normal) var(--ease-out) both;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.popover__title {
+  margin: 0 0 4px;
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.popover__desc {
+  margin: 0;
+  color: var(--c-text-muted);
+  line-height: 1.45;
+  font-size: 13px;
+}
+
+.popover__info {
+  margin: 10px 0 0;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+
+.param {
+  margin-top: 12px;
+}
+
+.param__label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.param__symbol {
+  font-family: var(--f-mono);
+  font-weight: 600;
+  font-style: italic;
+  color: var(--c-highlight);
+}
+
+.param__name {
+  flex: 1;
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+.param__value {
+  font-family: var(--f-mono);
+  font-weight: 600;
+  color: var(--c-primary);
+}
+
+.param__slider {
+  width: 100%;
+  margin: 8px 0 0;
+  height: 22px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.param__slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--c-primary) var(--fill),
+    var(--c-border-soft) var(--fill)
+  );
+}
+
+.param__slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-border-soft);
+}
+
+.param__slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-primary);
+}
+
+.param__slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  border: 3px solid var(--c-surface);
+  box-shadow: 0 0 0 var(--ink-width) var(--c-ink);
+}
+
+.param__slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  border: 3px solid var(--c-surface);
+  box-shadow: 0 0 0 var(--ink-width) var(--c-ink);
+}

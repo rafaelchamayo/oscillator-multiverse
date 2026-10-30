@@ -1,5 +1,28 @@
 {
   "title": "Simple harmonic oscillator",
   "short": "Simple harmonic",
-  "tagline": "One block, one spring and the prettiest ellipse in phase space."
+  "tagline": "One block, one spring and the prettiest ellipse in phase space.",
+  "objects": {
+    "block": {
+      "title": "Block",
+      "desc": "It has mass m: its inertia. The more mass, the harder it is to accelerate (F = m ẍ) and the slower it oscillates."
+    },
+    "spring": {
+      "title": "Spring",
+      "desc": "Pulls or pushes in proportion to how much you stretch or compress it, F = −k x. Stiffer (larger k) → faster oscillation."
+    },
+    "wall": {
+      "title": "Wall",
+      "desc": "Fixed point the spring is anchored to. It never moves: it is the reference for the motion."
+    },
+    "velocity": {
+      "title": "Velocity",
+      "desc": "The arrow shows the velocity v. While paused, drag its tip to choose the initial velocity v₀."
+    }
+  },
+  "params": {
+    "m": "Mass",
+    "k": "Spring constant"
+  },
+  "derived": "ω₀ = {w} rad/s · T = {T} s"
 }

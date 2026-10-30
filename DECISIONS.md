@@ -91,6 +91,22 @@ Minor, reversible decisions taken during implementation, and why.
   dashed in pink on the paper and in every plot.
 - **Toolbar inset**: the view fits the scene above the floating toolbar (`ViewTransform.insetBottom`).
 
+## Phase 4 — Hover, popovers and the ODE
+
+- **Objects are declared by the plugin** (`sim.objects`): id, ODE term ids, sliders (`ParamDef`) and optional
+  derived info (ω₀, T). Texts live at `osc.<id>.objects.<obj>.{title,desc}`. The scene only provides `hit` and
+  `objectBox`; the popover is a React element positioned by the controller every frame.
+- **One highlight for everything**: canvas hover › ODE-term hover › open popover. The same id drives the canvas
+  glow and the `term-lit` class on the KaTeX terms (tagged with `\htmlClass`, KaTeX `trust` limited to it).
+- **Popover placement**: above the object's screen box, else below, right or left, so it never covers the
+  object in either perspective. It waits 350 ms after the pointer leaves the object so it can be reached, stays
+  open while the pointer is inside, and hides while dragging.
+- **Slider changes keep the motion as seen**, like gravity: when m or k move the equilibrium (vertical view
+  with gravity), x, x₀ and the trace shift by Δx_eq.
+- **ODE with gravity** reads `m ẍ + k x = −m g` (x points up), with values: `2.0 ẍ + 8.0 x = −2.0 · 9.81`.
+  The gravity term belongs to the block (the weight acts on it).
+- The block's popover replaces the v₀ tag while it is open (they would overlap).
+
 ## Planned (from the approved plan; detailed when implemented)
 
 - **Driving force**: option (a), a direct force F₀ cos ωt on the block; the crank is visual only. The ODE then

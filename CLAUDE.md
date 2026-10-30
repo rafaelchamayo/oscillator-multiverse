@@ -51,13 +51,16 @@ draws registered plot canvases each frame. Gravity changes go through `spec.setG
 
 ## Adding an oscillator
 
-(Completed in Phase 4 with the SHO as the worked example.)
+The SHO (`src/oscillators/sho/`) is the worked example.
 
 1. Write the physics in `src/models/<id>/model.ts` (an `odeModel` + `mechanicalKinematic` for a 1-DOF body)
    with numerical tests next to it.
 2. Create `src/oscillators/<id>/` with `i18n/{es,en}.json` (`title`, `short`, `tagline` at minimum),
    `scene.ts` (a `MechanicalScene`: bounds, update, draw, drawOverlay, hit, clampX, velocityFromHandle) and
-   `index.ts` exporting an `OscillatorPlugin` whose `sim` names the model, defaults and `createScene`.
+   `index.ts` exporting an `OscillatorPlugin` whose `sim` names the model, defaults, `createScene`, the
+   hoverable `objects` (ODE terms + sliders; texts at `objects.<id>.{title,desc}` in the plugin i18n), the
+   `historyKeys`, `chips` and `panels`. The scene's `hit` ids must match the object ids, and `objectBox`
+   tells the popover where the object is.
    See `src/oscillators/sho/` — reuse primitives from `src/render/scene/`.
 3. Add one line `registerPlugin(<yourPlugin>)` in `src/oscillators/registry.ts`.
 
@@ -67,6 +70,6 @@ draws registered plot canvases each frame. Gravity changes go through `spec.setG
 - [x] Phase 1 — Physics core (Model/odeModel, RK4, SimulationLoop, SHO + damped-driven, §8 tests)
 - [x] Phase 2 — SHO scene (metal block with squash & stretch, helix spring, drag/fling/grab, v₀ arrow, toolbar, zoom/pan; light sketchbook theme)
 - [x] Phase 3 — Trace and plots (paper trace, side-panel plots with chips, vertical view + gravity)
-- [ ] Phase 4 — Hover, popovers, ODE
+- [x] Phase 4 — Hover, popovers, ODE (object popovers with the only sliders, live KaTeX ODE, term↔object highlight)
 - [ ] Phase 5 — Damped driven oscillator
 - [ ] Phase 6 — Presentation mode and polish

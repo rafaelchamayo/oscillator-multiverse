@@ -21,10 +21,37 @@ export interface MechanicalSimSpec<P> {
   chips: ChipDef[];
   /** Side-panel plots; each is visible while any of its chips is on. */
   panels: PanelDef[];
+  /** Interactive objects of the scene: hover glow, popover (description + sliders), ODE terms. */
+  objects: ObjectDef[];
   /** Present when the model supports the vertical view with gravity. */
   setGravity?(params: P, g: number): void;
   /** Rest position of the body for these params (where the gravity sag puts it). */
   equilibrium?(params: P): number;
+}
+
+/**
+ * An object the user can hover. Texts live at `osc.<plugin>.objects.<id>.{title,desc}`;
+ * `terms` are the ids of the ODE terms it stands for (highlighted together).
+ */
+export interface ObjectDef {
+  id: string;
+  terms: string[];
+  /** Sliders shown in its popover: the only sliders in the app. */
+  params: ParamDef[];
+  /** Derived quantities shown under the sliders: an i18n template and its values. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  info?: { key: TKey; vars(params: any): Record<string, string> };
+}
+
+export interface ParamDef {
+  key: string;
+  /** Symbol shown next to the slider (plain text, e.g. "m"). */
+  symbol: string;
+  unit: string;
+  min: number;
+  max: number;
+  step: number;
+  digits: number;
 }
 
 export interface ChipDef {

@@ -314,7 +314,8 @@ export function createShoScene(): MechanicalScene<ShoParams> {
       };
 
       // v₀ tag pinned to the block's top; x₀ tag pinned to the floor mark.
-      if (!f.running) {
+      // The block's popover takes the v₀ tag's place while it is open.
+      if (!f.running && !(f.hoverId === 'block' && !f.held)) {
         const top = view.toScreen(x, cw - side / 2);
         drawCallout(
           g,
@@ -399,6 +400,36 @@ export function createShoScene(): MechanicalScene<ShoParams> {
         return { objectId: 'wall', role: 'object' };
       }
       return null;
+    },
+
+    objectBox(id, f: F) {
+      const x = f.state[0]!;
+      const cw = blockCenterW(side);
+      const wallU = offsetOf(f.params) + WALL_U;
+      switch (id) {
+        case 'block':
+          return {
+            uMin: x - side / 2,
+            uMax: x + side / 2,
+            wMin: cw - side / 2,
+            wMax: cw + side / 2,
+          };
+        case 'spring':
+          return { uMin: wallU, uMax: x - side / 2, wMin: cw - 0.1, wMax: cw + 0.1 };
+        case 'wall':
+          return { uMin: wallU - 0.17, uMax: wallU, wMin: FLOOR_W - WALL_HEIGHT, wMax: FLOOR_W };
+        case 'velocity': {
+          const { start, tip } = arrowGeom(x, f.state[1]!, side);
+          return {
+            uMin: Math.min(start, tip),
+            uMax: Math.max(start, tip),
+            wMin: cw - 0.05,
+            wMax: cw + 0.05,
+          };
+        }
+        default:
+          return null;
+      }
     },
 
     onFling(v, f: F) {

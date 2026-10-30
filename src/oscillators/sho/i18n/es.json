@@ -1,5 +1,28 @@
 {
   "title": "Oscilador armónico simple",
   "short": "Armónico simple",
-  "tagline": "Un bloque, un resorte y la elipse más bonita del espacio de fases."
+  "tagline": "Un bloque, un resorte y la elipse más bonita del espacio de fases.",
+  "objects": {
+    "block": {
+      "title": "Bloque",
+      "desc": "Tiene masa m: su inercia. Cuanta más masa, más le cuesta acelerar (F = m ẍ) y más lento oscila."
+    },
+    "spring": {
+      "title": "Resorte",
+      "desc": "Ejerce una fuerza proporcional a cuánto lo estiras o comprimes, F = −k x. Más rígido (k mayor) → oscila más rápido."
+    },
+    "wall": {
+      "title": "Pared",
+      "desc": "Punto fijo donde se ancla el resorte. No se mueve: es la referencia del movimiento."
+    },
+    "velocity": {
+      "title": "Velocidad",
+      "desc": "La flecha muestra la velocidad v. En pausa, arrastra su punta para elegir la velocidad inicial v₀."
+    }
+  },
+  "params": {
+    "m": "Masa",
+    "k": "Constante del resorte"
+  },
+  "derived": "ω₀ = {w} rad/s · T = {T} s"
 }

@@ -49,5 +49,12 @@
     "window": "{s} s",
     "time": "t (s)",
     "manual": "hand-driven"
+  },
+  "ode": {
+    "label": "Equation of motion",
+    "hint": "Hover a term to see which object produces it"
+  },
+  "popover": {
+    "close": "Close"
   }
 }

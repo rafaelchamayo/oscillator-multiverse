@@ -18,6 +18,12 @@ interface SimUiState {
   chips: Record<string, boolean>;
   /** Seconds of history shown by the trace and the time plots. */
   traceWindow: number;
+  /** Scene object under the canvas pointer (drives the popover). */
+  hoverId: string | null;
+  /** Object highlighted everywhere (canvas glow + ODE terms), from any source. */
+  highlightId: string | null;
+  /** Snapshot of the model parameters, refreshed when they change (ODE, sliders). */
+  params: Record<string, number>;
   setSerious: (v: boolean) => void;
   togglePerspective: () => void;
   setGravity: (v: boolean) => void;
@@ -33,6 +39,9 @@ export const useSimStore = create<SimUiState>((set) => ({
   gravity: true,
   chips: {},
   traceWindow: 8,
+  hoverId: null,
+  highlightId: null,
+  params: {},
   setSerious: (serious) => set({ serious }),
   togglePerspective: () =>
     set((s) => ({

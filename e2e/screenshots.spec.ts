@@ -140,6 +140,37 @@ test('screenshot sho mid-rotation', async ({ page }) => {
   await page.screenshot({ path: 'e2e/screenshots/sho-rotating.png' });
 });
 
+test('screenshot sho block popover (es)', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  const d = (await sim(page, 'return s.debug();')) as { block: { x: number; y: number } };
+  await page.mouse.move(d.block.x, d.block.y);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: 'e2e/screenshots/sho-popover-block.png' });
+});
+
+test('screenshot sho spring popover while running (en)', async ({ page }) => {
+  await open(page, '/#/sho', 'en');
+  await sim(page, 's.setParam("k", 20); s.play();');
+  await page.waitForTimeout(1500);
+  const p = (await sim(page, 'return s.pageCoords(-0.9, s.debug().bodyW);')) as {
+    x: number;
+    y: number;
+  };
+  await page.mouse.move(p.x, p.y);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'e2e/screenshots/sho-popover-spring.png' });
+});
+
+test('screenshot sho ODE term hover + vertical gravity', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  await page.getByTestId('perspective').click();
+  await sim(page, 's.play();');
+  await page.waitForTimeout(1600);
+  await page.locator('[data-testid=ode] .term--gravity').hover();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'e2e/screenshots/sho-ode-gravity.png' });
+});
+
 test('screenshot damped-driven-es (placeholder)', async ({ page }) => {
   await open(page, '/#/damped-driven', 'es');
   await page.screenshot({ path: 'e2e/screenshots/damped-driven-es.png' });

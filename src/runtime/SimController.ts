@@ -36,7 +36,13 @@ export class SimController<P> {
   readonly history: History;
   /** Conditions restored by Reset; updated whenever the user edits x₀ or v₀. */
   ic: MechanicalInit;
+  /** Object under the canvas pointer. */
   hoverId: string | null = null;
+  /** Object whose ODE term is under the pointer. */
+  termHoverId: string | null = null;
+  /** Object whose popover is open, and the popover element (positioned every frame). */
+  popoverId: string | null = null;
+  popoverEl: HTMLElement | null = null;
   /** Pointer over the stage, in scene coordinates. */
   pointer: Vec2 | null = null;
   /** The hand is holding the body (in any mode). */
@@ -60,6 +66,8 @@ export class SimController<P> {
   private angleFrom = 0;
   private angleTo = 0;
   private angleT = 1;
+  /** g last applied to the params (NaN before the first application). */
+  private gravity = NaN;
 
   constructor(readonly spec: MechanicalSimSpec<P>) {
     this.ic = { ...spec.defaultInit };
@@ -206,7 +214,7 @@ export class SimController<P> {
       px: 1 / this.view.pxPerMeter,
       ppx: 1 / this.view.fitScale,
       serious: ui.serious,
-      hoverId: this.hoverId,
+      hoverId: this.highlightId,
       realDt,
       history: this.history,
       chips: ui.chips,
@@ -214,6 +222,30 @@ export class SimController<P> {
       pointer: this.pointer,
       tr: this.translator(lang),
     };
+  }
+
+  /** The UI's popover for object `id` (null closes it). */
+  setPopover(id: string | null, el: HTMLElement | null): void {
+    this.popoverId = id;
+    this.popoverEl = el;
+  }
+
+  /** The object whose ODE term is under the pointer (null when none). */
+  setTermHover(id: string | null): void {
+    this.termHoverId = id;
+  }
+
+  /** What is highlighted: the canvas hover wins, then the ODE term, then the open popover. */
+  get highlightId(): string | null {
+    return this.hoverId ?? this.termHoverId ?? this.popoverId;
+  }
+
+  /** Sets a model parameter from a slider, keeping the motion as seen (see applyGravity). */
+  setParam(key: string, value: number): void {
+    this.changeParams(() => {
+      (this.params as Record<string, number>)[key] = value;
+    });
+    this.syncStore();
   }
 
   get isVertical(): boolean {
@@ -230,18 +262,27 @@ export class SimController<P> {
     this.history.offer(this.loop.t, this.stepObs, false, true);
   }
 
-  /**
-   * Switches gravity on/off keeping the motion as seen: the displacement from equilibrium,
-   * the velocity and the time are preserved, so x (measured from the spring's natural length)
-   * shifts by Δx_eq together with the history, the initial condition and the scenery.
-   */
+  /** Gravity follows the view (on only in the vertical one, unless toggled off). */
   private applyGravity(): void {
-    const { setGravity, equilibrium } = this.spec;
+    const { setGravity } = this.spec;
     if (!setGravity) return;
     const ui = useSimStore.getState();
     const g = ui.perspective === 'vertical' && ui.gravity ? G_EARTH : 0;
+    if (this.gravity === g) return;
+    this.gravity = g;
+    this.changeParams(() => setGravity(this.params, g));
+    this.syncStore();
+  }
+
+  /**
+   * Applies a parameter change. When it moves the equilibrium (gravity, or m/k with gravity on),
+   * the displacement from equilibrium is preserved: x, x₀, the stored x samples and the camera
+   * shift by Δx_eq, so the motion and the trace look unchanged and nothing jumps.
+   */
+  private changeParams(mutate: () => void): void {
+    const { equilibrium } = this.spec;
     const before = equilibrium?.(this.params) ?? 0;
-    setGravity(this.params, g);
+    mutate();
     const d = (equilibrium?.(this.params) ?? 0) - before;
     if (d === 0) return;
     const k = this.spec.model;
@@ -307,6 +348,8 @@ export class SimController<P> {
     this.scene.drawOverlay?.(g, f);
 
     this.renderPlots(f, realDt);
+    this.syncHover();
+    this.placePopover(f);
   }
 
   private renderPlots(f: FrameInfo<Float64Array, P>, realDt: number): void {
@@ -333,7 +376,64 @@ export class SimController<P> {
   }
 
   private syncStore(): void {
-    useSimStore.setState({ running: this.loop.running, speed: this.loop.speed });
+    useSimStore.setState({
+      running: this.loop.running,
+      speed: this.loop.speed,
+      params: { ...(this.params as Record<string, number>) },
+    });
+  }
+
+  /** Mirrors hover/highlight into the store only when they change (React re-renders). */
+  private syncHover(): void {
+    const ui = useSimStore.getState();
+    const hl = this.highlightId;
+    if (ui.hoverId !== this.hoverId || ui.highlightId !== hl) {
+      useSimStore.setState({ hoverId: this.hoverId, highlightId: hl });
+    }
+  }
+
+  /**
+   * Keeps the open popover next to its object (which may be moving) without covering it:
+   * above, else below, right or left of the object's screen box. Hidden while dragging.
+   */
+  private placePopover(f: FrameInfo<Float64Array, P>): void {
+    const el = this.popoverEl;
+    if (!el || !this.popoverId) return;
+    const b = this.scene.objectBox?.(this.popoverId, f);
+    if (!b || this.held) {
+      el.style.visibility = 'hidden';
+      return;
+    }
+    const pts = [
+      this.view.toScreen(b.uMin, b.wMin),
+      this.view.toScreen(b.uMax, b.wMin),
+      this.view.toScreen(b.uMin, b.wMax),
+      this.view.toScreen(b.uMax, b.wMax),
+    ];
+    const r = {
+      l: Math.min(...pts.map((p) => p.x)),
+      r: Math.max(...pts.map((p) => p.x)),
+      t: Math.min(...pts.map((p) => p.y)),
+      b: Math.max(...pts.map((p) => p.y)),
+    };
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const W = this.view.width;
+    const H = this.view.height - this.view.insetBottom;
+    const gap = 14;
+    const cx = (r.l + r.r) / 2 - w / 2;
+    const cy = (r.t + r.b) / 2 - h / 2;
+    const options = [
+      { x: cx, y: r.t - gap - h, fits: r.t - gap - h >= 8 },
+      { x: cx, y: r.b + gap, fits: r.b + gap + h <= H },
+      { x: r.r + gap, y: cy, fits: r.r + gap + w <= W - 8 },
+      { x: r.l - gap - w, y: cy, fits: r.l - gap - w >= 8 },
+    ];
+    const pick = options.find((o) => o.fits) ?? options[1]!;
+    const x = Math.min(Math.max(pick.x, 8), W - w - 8);
+    const y = Math.min(Math.max(pick.y, 8), this.view.height - h - 8);
+    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    el.style.visibility = 'visible';
   }
 
   /** Read-only snapshot for Playwright (exposed on window in dev). */
@@ -356,6 +456,7 @@ export class SimController<P> {
       angle: this.view.angle,
       pxPerMeter: this.view.pxPerMeter,
       historyLength: this.history.length,
+      highlightId: this.highlightId,
       params: { ...this.params },
       bodyW,
       block: { x: (rect?.left ?? 0) + p.x, y: (rect?.top ?? 0) + p.y },
