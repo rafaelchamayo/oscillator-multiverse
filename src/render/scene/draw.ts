@@ -31,25 +31,43 @@ export function alpha(hex: string, a: number): string {
   return `${hex}${n.toString(16).padStart(2, '0')}`;
 }
 
-/** Pill-shaped label drawn in screen pixels. */
-export function drawPillLabel(
+export interface CalloutPart {
+  text: string;
+  color: string;
+}
+
+/**
+ * Dark callout bubble (screen pixels) centered at (x, y). With `anchor`, a short leader line
+ * joins the bubble to that point, like a tag pinned to an object.
+ */
+export function drawCallout(
   g: CanvasRenderingContext2D,
   x: number,
   y: number,
-  text: string,
-  opts: { color: string; bg: string; border: string; font: string },
+  parts: CalloutPart[],
+  opts: { bg: string; font: string; anchor?: { x: number; y: number }; leader: string },
 ): void {
   g.font = opts.font;
-  const w = g.measureText(text).width + 16;
-  const h = 22;
+  const widths = parts.map((p) => g.measureText(p.text).width);
+  const w = widths.reduce((a, b) => a + b, 0) + 26;
+  const h = 30;
+  if (opts.anchor) {
+    g.strokeStyle = opts.leader;
+    g.lineWidth = 2;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(opts.anchor.x, opts.anchor.y);
+    g.stroke();
+  }
   roundRectPath(g, x - w / 2, y - h / 2, w, h, h / 2);
   g.fillStyle = opts.bg;
   g.fill();
-  g.strokeStyle = opts.border;
-  g.lineWidth = 1;
-  g.stroke();
-  g.fillStyle = opts.color;
-  g.textAlign = 'center';
+  g.textAlign = 'left';
   g.textBaseline = 'middle';
-  g.fillText(text, x, y + 0.5);
+  let cx = x - w / 2 + 13;
+  parts.forEach((p, i) => {
+    g.fillStyle = p.color;
+    g.fillText(p.text, cx, y + 0.5);
+    cx += widths[i]!;
+  });
 }

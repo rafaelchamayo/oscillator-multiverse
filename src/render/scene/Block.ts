@@ -1,261 +1,162 @@
 import { colors, fonts } from '../theme';
-import { alpha, approach, clamp, roundRectPath } from './draw';
+import { alpha, clamp } from './draw';
 
-/** Inputs that drive the block's mood each frame. */
-export interface BlockMoodInput {
-  /** Velocity along the axis (m/s) — eyes look this way. */
+export interface BlockMotionInput {
+  /** Velocity along the axis (m/s): the block stretches along its motion. */
   v: number;
-  /** Acceleration along the axis (m/s²) — squash at turning points. */
+  /** Acceleration along the axis (m/s²): it squashes at turning points. */
   a: number;
-  /** Spring deformation: −1 fully compressed … +1 strongly stretched. */
-  strain: number;
-  held: boolean;
   dt: number;
 }
 
 export interface BlockDrawInput {
+  /** Center of the undeformed block (scene meters). */
   u: number;
   w: number;
   side: number;
+  /** Meters per pixel for outlines (scales with zoom). */
   px: number;
+  /** Serious mode: no squash & stretch. */
   serious: boolean;
   glow: boolean;
-  /** View rotation, so the face can stay upright. */
-  viewAngle: number;
-  label: string;
 }
 
 /**
- * The block as a character. All of this is cosmetic: squash & stretch preserves the
- * area and is centered on the physical position, and hit-testing uses the undeformed box.
+ * Brushed-metal block with chamfered corners. Squash & stretch is purely cosmetic: it is
+ * area-preserving, anchored on the floor contact, and centered on the physical position —
+ * hit-testing and physics always use the undeformed square.
  */
-export class BlockCharacter {
-  private look = 0;
+export class MetalBlock {
   private squash = 0;
-  private fear = 0;
-  private dizzy = 0;
-  private grab = 0;
-  private blinkClock = 0;
-  private nextBlink = 3;
-  private wobble = 0;
+  private squashVel = 0;
 
-  update(m: BlockMoodInput): void {
-    const dt = m.dt;
-    this.look = approach(this.look, clamp(m.v / 1.2, -1, 1), 10, dt);
-    // Stretch along the motion when fast, squash when acceleration peaks (turning points).
-    const target = 0.09 * Math.tanh(Math.abs(m.v) / 2) - 0.09 * Math.tanh(Math.abs(m.a) / 25);
-    this.squash = approach(this.squash, target, 14, dt);
-    const fearTarget = clamp((Math.abs(m.strain) - 0.55) / 0.3, 0, 1);
-    this.fear = approach(this.fear, fearTarget, 8, dt);
-    const dizzyTarget = Math.abs(m.v) > 3 ? 1 : 0;
-    // Gets dizzy fast, recovers slowly.
-    this.dizzy = approach(this.dizzy, dizzyTarget, dizzyTarget > this.dizzy ? 6 : 1.2, dt);
-    this.grab = approach(this.grab, m.held ? 1 : 0, 12, dt);
-    this.wobble += dt;
-    this.blinkClock += dt;
-    if (this.blinkClock > this.nextBlink + 0.15) {
-      this.blinkClock = 0;
-      // Deterministic pseudo-random spacing between blinks.
-      this.nextBlink = 2.5 + ((this.nextBlink * 7.31) % 2.5);
-    }
+  /** Current horizontal scale of the drawn block (1 in serious mode). */
+  scaleX(serious: boolean): number {
+    return serious ? 1 : 1 + this.squash;
   }
 
-  /** Compressed-vs-stretched sign of the current fear (for the face). */
-  private strainSign = 0;
-  setStrainSign(s: number): void {
-    this.strainSign = s;
+  update(m: BlockMotionInput): void {
+    const dt = Math.min(m.dt, 1 / 30);
+    const target = 0.26 * Math.tanh(Math.abs(m.v) / 1.8) - 0.24 * Math.tanh(Math.abs(m.a) / 18);
+    // Under-damped spring towards the target: a jelly-like wobble after impacts.
+    const k = 260;
+    const c = 12;
+    const steps = 4;
+    for (let i = 0; i < steps; i++) {
+      const h = dt / steps;
+      this.squashVel += (-k * (this.squash - target) - c * this.squashVel) * h;
+      this.squash += this.squashVel * h;
+    }
+    this.squash = clamp(this.squash, -0.32, 0.36);
   }
 
   draw(g: CanvasRenderingContext2D, d: BlockDrawInput): void {
-    const sx = d.serious ? 1 : 1 + this.squash;
+    const sx = this.scaleX(d.serious);
     const sy = 1 / sx;
-    const half = d.side / 2;
-    const r = d.side * 0.22;
+    const s = d.side;
+    const half = s / 2;
+    const wBottom = d.w + half;
+
+    // Contact shadow on the floor, widening with the squash.
+    g.fillStyle = alpha(colors.primary, 0.14);
+    g.beginPath();
+    g.ellipse(d.u, wBottom + 0.012, half * sx * 1.15, 0.022, 0, 0, Math.PI * 2);
+    g.fill();
 
     g.save();
-    g.translate(d.u, d.w);
+    // Scale about the floor contact point so the block stays on the floor.
+    g.translate(d.u, wBottom);
+    g.scale(sx, sy);
+    g.translate(0, -half);
 
-    if (d.glow) {
-      g.save();
-      g.shadowColor = colors.magenta;
-      g.shadowBlur = 30;
-      roundRectPath(g, -half * sx, -half * sy, d.side * sx, d.side * sy, r);
-      g.fillStyle = alpha(colors.magenta, 0.4);
-      g.fill();
-      g.restore();
-    }
+    const ch = s * 0.16; // chamfer
+    const outline = () => {
+      g.beginPath();
+      g.moveTo(-half + ch, -half);
+      g.lineTo(half - ch, -half);
+      g.lineTo(half, -half + ch);
+      g.lineTo(half, half - ch);
+      g.lineTo(half - ch, half);
+      g.lineTo(-half + ch, half);
+      g.lineTo(-half, half - ch);
+      g.lineTo(-half, -half + ch);
+      g.closePath();
+    };
+    // Undo the non-uniform scale for stroke widths.
+    const lw = (n: number) => (n * d.px) / Math.sqrt(sx * sy);
 
-    // Body.
-    roundRectPath(g, -half * sx, -half * sy, d.side * sx, d.side * sy, r);
-    const grad = g.createLinearGradient(0, -half, 0, half);
-    grad.addColorStop(0, '#8E7BFF');
-    grad.addColorStop(1, '#4C5BEF');
+    outline();
+    const grad = g.createLinearGradient(-half, -half, half, half);
+    grad.addColorStop(0, colors.metalLight);
+    grad.addColorStop(1, colors.metal);
     g.fillStyle = grad;
     g.fill();
-    g.lineWidth = 2.5 * d.px;
-    g.strokeStyle = d.glow ? colors.magenta : alpha(colors.lilac, 0.9);
+
+    // Inner face (the "top" of the bevel).
+    const inset = s * 0.15;
+    const ih = half - inset;
+    const faceGrad = g.createLinearGradient(-ih, -ih, ih, ih);
+    faceGrad.addColorStop(0, '#E4E6EA');
+    faceGrad.addColorStop(1, '#C3C7CE');
+    g.fillStyle = faceGrad;
+    g.fillRect(-ih, -ih, 2 * ih, 2 * ih);
+
+    // Brushed hatching on the lower-right of the face.
+    g.save();
+    g.beginPath();
+    g.rect(-ih, -ih, 2 * ih, 2 * ih);
+    g.clip();
+    g.strokeStyle = alpha(colors.metalDark, 0.45);
+    g.lineWidth = lw(1.2);
+    g.beginPath();
+    for (let k = -2 * ih; k < 2 * ih; k += s * 0.09) {
+      g.moveTo(k, ih);
+      g.lineTo(k + ih * 0.7, ih * 0.3);
+    }
+    g.stroke();
+    g.restore();
+
+    // Bevel edges.
+    g.strokeStyle = alpha(colors.ink, 0.55);
+    g.lineWidth = lw(1.4);
+    g.strokeRect(-ih, -ih, 2 * ih, 2 * ih);
+    g.beginPath();
+    g.moveTo(-half + ch * 0.5, -half + ch * 0.5);
+    g.lineTo(-ih, -ih);
+    g.moveTo(half - ch * 0.5, -half + ch * 0.5);
+    g.lineTo(ih, -ih);
+    g.moveTo(half - ch * 0.5, half - ch * 0.5);
+    g.lineTo(ih, ih);
+    g.moveTo(-half + ch * 0.5, half - ch * 0.5);
+    g.lineTo(-ih, ih);
+    g.stroke();
+    // Highlight on the top-left bevel.
+    g.strokeStyle = alpha('#FFFFFF', 0.8);
+    g.lineWidth = lw(2);
+    g.beginPath();
+    g.moveTo(-half + ch, -half + lw(2.5));
+    g.lineTo(half - ch, -half + lw(2.5));
     g.stroke();
 
-    // Top highlight.
-    g.save();
-    roundRectPath(g, -half * sx, -half * sy, d.side * sx, d.side * sy, r);
-    g.clip();
-    g.fillStyle = alpha('#FFFFFF', 0.12);
-    g.beginPath();
-    g.ellipse(-half * 0.25, -half * 0.95, half * 1.1, half * 0.45, -0.2, 0, Math.PI * 2);
-    g.fill();
-    g.restore();
-
-    // Face (or a plain label in serious mode), kept upright when the view rotates.
-    g.rotate(-d.viewAngle);
-    g.scale(d.side, d.side);
-    if (d.serious) this.drawLabel(g, d);
-    else this.drawFace(g, d.px / d.side);
-    g.restore();
-  }
-
-  private drawLabel(g: CanvasRenderingContext2D, d: BlockDrawInput): void {
-    g.fillStyle = colors.text;
-    g.font = `600 0.32px ${fonts.mono}`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText(d.label, 0, 0.02);
-  }
-
-  /** Face in units of the block side (−0.5…0.5). `p` is one pixel in those units. */
-  private drawFace(g: CanvasRenderingContext2D, p: number): void {
-    const look = this.look * 0.045;
-    const eyeY = -0.08;
-    const eyeDX = 0.19;
-    const lw = Math.max(2.2 * p, 0.03);
-    g.lineCap = 'round';
+    outline();
+    g.strokeStyle = d.glow ? colors.highlight : colors.ink;
+    g.lineWidth = lw(d.glow ? 4 : 3);
     g.lineJoin = 'round';
-
-    // Cheeks.
-    g.fillStyle = alpha(colors.magenta, 0.35 + 0.2 * this.grab);
-    for (const s of [-1, 1]) {
-      g.beginPath();
-      g.ellipse(s * 0.3 + look * 0.5, 0.1, 0.075, 0.045, 0, 0, Math.PI * 2);
-      g.fill();
-    }
-
-    const blinking = this.blinkClock > this.nextBlink;
-    g.strokeStyle = '#1B1440';
-    g.fillStyle = '#1B1440';
-    g.lineWidth = lw;
-
-    if (this.grab > 0.5) {
-      // Happy closed eyes ^ ^.
-      for (const s of [-1, 1]) {
-        g.beginPath();
-        g.moveTo(s * eyeDX - 0.07, eyeY + 0.03);
-        g.lineTo(s * eyeDX, eyeY - 0.04);
-        g.lineTo(s * eyeDX + 0.07, eyeY + 0.03);
-        g.stroke();
-      }
-    } else if (this.dizzy > 0.5) {
-      // Spiral eyes.
-      for (const s of [-1, 1]) {
-        g.beginPath();
-        for (let i = 0; i <= 40; i++) {
-          const th = (i / 40) * Math.PI * 4 + this.wobble * 8 * s;
-          const rr = 0.008 + (i / 40) * 0.075;
-          const x = s * eyeDX + Math.cos(th) * rr;
-          const y = eyeY + Math.sin(th) * rr;
-          if (i === 0) g.moveTo(x, y);
-          else g.lineTo(x, y);
-        }
-        g.stroke();
-      }
-    } else if (this.fear > 0.5 && this.strainSign < 0) {
-      // Squeezed: > <
-      for (const s of [-1, 1]) {
-        g.beginPath();
-        g.moveTo(s * eyeDX - s * 0.06, eyeY - 0.05);
-        g.lineTo(s * eyeDX + s * 0.05, eyeY);
-        g.lineTo(s * eyeDX - s * 0.06, eyeY + 0.05);
-        g.stroke();
-      }
-    } else if (blinking) {
-      for (const s of [-1, 1]) {
-        g.beginPath();
-        g.moveTo(s * eyeDX - 0.07, eyeY);
-        g.lineTo(s * eyeDX + 0.07, eyeY);
-        g.stroke();
-      }
-    } else {
-      // Open eyes; wider when scared.
-      const er = 0.1 + 0.035 * this.fear;
-      for (const s of [-1, 1]) {
-        g.fillStyle = '#FFFFFF';
-        g.beginPath();
-        g.ellipse(s * eyeDX, eyeY, er * 0.9, er, 0, 0, Math.PI * 2);
-        g.fill();
-        g.fillStyle = '#1B1440';
-        g.beginPath();
-        const pr = 0.05 - 0.015 * this.fear;
-        g.arc(s * eyeDX + look, eyeY + 0.01, pr, 0, Math.PI * 2);
-        g.fill();
-        g.fillStyle = '#FFFFFF';
-        g.beginPath();
-        g.arc(s * eyeDX + look - pr * 0.4, eyeY - pr * 0.4, pr * 0.35, 0, Math.PI * 2);
-        g.fill();
-      }
-      if (this.fear > 0.3) {
-        // Worried eyebrows.
-        g.strokeStyle = '#1B1440';
-        for (const s of [-1, 1]) {
-          g.beginPath();
-          // Inner ends raised: worried, not angry.
-          g.moveTo(s * eyeDX - s * 0.08, eyeY - 0.2);
-          g.lineTo(s * eyeDX + s * 0.06, eyeY - 0.155);
-          g.stroke();
-        }
-      }
-    }
-
-    // Mouth.
-    g.strokeStyle = '#1B1440';
-    g.fillStyle = '#1B1440';
-    const my = 0.17;
-    if (this.grab > 0.5) {
-      g.beginPath();
-      g.arc(0, my - 0.02, 0.09, 0.1, Math.PI - 0.1);
-      g.closePath();
-      g.fill();
-      g.fillStyle = colors.magenta;
-      g.beginPath();
-      g.ellipse(0, my + 0.045, 0.04, 0.022, 0, 0, Math.PI * 2);
-      g.fill();
-    } else if (this.dizzy > 0.5) {
-      g.beginPath();
-      for (let i = 0; i <= 20; i++) {
-        const x = -0.1 + (i / 20) * 0.2;
-        const y = my + Math.sin(i * 1.2 + this.wobble * 10) * 0.018;
-        if (i === 0) g.moveTo(x, y);
-        else g.lineTo(x, y);
-      }
-      g.stroke();
-    } else if (this.fear > 0.5) {
-      if (this.strainSign < 0) {
-        // Gritted teeth.
-        roundRectPath(g, -0.1, my - 0.035, 0.2, 0.07, 0.025);
-        g.fillStyle = '#FFFFFF';
-        g.fill();
-        g.stroke();
-        g.beginPath();
-        g.moveTo(-0.1, my);
-        g.lineTo(0.1, my);
-        g.stroke();
-      } else {
-        g.beginPath();
-        g.ellipse(0, my, 0.045, 0.06, 0, 0, Math.PI * 2);
-        g.fill();
-      }
-    } else {
-      g.beginPath();
-      g.arc(0, my - 0.06, 0.08, 0.35, Math.PI - 0.35);
-      g.stroke();
-    }
+    g.stroke();
+    g.restore();
   }
+}
+
+/** Short playful exclamation drawn next to the block while it is held. */
+export function drawExclamation(
+  g: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  text: string,
+): void {
+  g.font = `600 18px ${fonts.display}`;
+  g.fillStyle = colors.highlight;
+  g.textAlign = 'right';
+  g.textBaseline = 'bottom';
+  g.fillText(text, x, y);
 }

@@ -46,3 +46,9 @@ export const ViewIcon = () => (
     <circle cx="12" cy="12" r="2.5" />
   </svg>
 );
+
+export const LogoWave = () => (
+  <svg {...base} width={24} height={24} strokeWidth={2.6}>
+    <path d="M3 12c2.2-7 4.3-7 6 0s3.8 7 6 0 3.8-7 6 0" />
+  </svg>
+);

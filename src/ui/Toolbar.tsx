@@ -27,6 +27,7 @@ export function Toolbar({ sim }: Props) {
       >
         {running ? <PauseIcon /> : <PlayIcon />}
       </button>
+      <span className="toolbar__sep" aria-hidden />
       <button
         type="button"
         className="toolbar__btn"
@@ -50,7 +51,7 @@ export function Toolbar({ sim }: Props) {
       <span className="toolbar__sep" aria-hidden />
       <button
         type="button"
-        className="toolbar__btn"
+        className="toolbar__btn toolbar__btn--ring"
         data-testid="serious"
         aria-pressed={serious}
         aria-label={t('toolbar.serious')}

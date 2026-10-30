@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('loads with two tabs and the dark theme', async ({ page }) => {
+test('loads with two tabs and the light sketchbook theme', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/#\/sho$/);
   await expect(page.getByTestId('tab-sho')).toHaveAttribute('aria-current', 'page');
@@ -8,7 +8,7 @@ test('loads with two tabs and the dark theme', async ({ page }) => {
   const bg = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue('--c-bg').trim(),
   );
-  expect(bg).toBe('#0B1026');
+  expect(bg).toBe('#F2F0EA');
 });
 
 test('switching tabs changes the route', async ({ page }) => {

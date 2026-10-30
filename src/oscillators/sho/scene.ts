@@ -1,8 +1,8 @@
-import { formatQuantity } from '../../core/units';
+import { formatNumber } from '../../core/units';
 import { SHO_RANGES, type ShoParams } from '../../models/sho/model';
 import { drawArrow, drawHandle } from '../../render/scene/Arrow';
-import { BlockCharacter } from '../../render/scene/Block';
-import { alpha, approach, clamp, drawPillLabel } from '../../render/scene/draw';
+import { MetalBlock, drawExclamation } from '../../render/scene/Block';
+import { approach, clamp, drawCallout } from '../../render/scene/draw';
 import { Particles } from '../../render/scene/Particles';
 import { drawSpring, springStyleFromK } from '../../render/scene/Spring';
 import { drawTrack } from '../../render/scene/Track';
@@ -11,8 +11,13 @@ import { drawWall } from '../../render/scene/Wall';
 import { colors, fonts } from '../../render/theme';
 import type { Vec2 } from '../../render/view';
 
-/** Scene layout in meters. x is the block's displacement; the block center sits at u = x. */
+/**
+ * Scene layout in meters. x is the block's displacement; the block center sits at u = x and
+ * rests on the floor at w = FLOOR_W, so its center height depends on its size.
+ */
 export const WALL_U = -1.35;
+export const FLOOR_W = 0.3;
+const WALL_HEIGHT = 0.78;
 const MIN_SPRING = 0.16;
 const MAX_X = 1.5;
 /** Arrow length per unit velocity (m per m/s). */
@@ -21,11 +26,13 @@ export const MAX_SPEED = 4;
 
 /** Block side: area ∝ m, 0.34 m at m = 2 kg. */
 export const blockSide = (m: number): number => 0.34 * Math.sqrt(m / 2);
+/** Height (w) of the block center, which is also the spring's axis. */
+export const blockCenterW = (side: number): number => FLOOR_W - side / 2;
 
 type F = FrameInfo<Float64Array, ShoParams>;
 
 export function createShoScene(): MechanicalScene<ShoParams> {
-  const block = new BlockCharacter();
+  const block = new MetalBlock();
   const particles = new Particles();
   // Smoothed side so changing m animates the block size.
   let side = blockSide(2);
@@ -37,7 +44,14 @@ export function createShoScene(): MechanicalScene<ShoParams> {
   };
 
   const scene: MechanicalScene<ShoParams> = {
-    bounds: () => ({ uMin: WALL_U - 0.25, uMax: MAX_X + 0.25, wMin: -0.65, wMax: 0.65 }),
+    bounds: () => ({
+      uMin: WALL_U - 0.25,
+      uMax: MAX_X + 0.25,
+      wMin: FLOOR_W - WALL_HEIGHT - 0.2,
+      wMax: FLOOR_W + 0.25,
+    }),
+
+    bodyW: (p) => blockCenterW(blockSide(p.m)),
 
     clampX: (x, p) => clamp(x, WALL_U + MIN_SPRING + blockSide(p.m) / 2, MAX_X),
 
@@ -51,13 +65,14 @@ export function createShoScene(): MechanicalScene<ShoParams> {
     },
 
     update(f: F) {
-      const x = f.state[0]!;
       side = approach(side, blockSide(f.params.m), 12, f.realDt || 1);
-      const rest = -side / 2 - WALL_U;
-      const len = x - side / 2 - WALL_U;
-      const strain = (len - rest) / rest;
-      block.setStrainSign(Math.sign(strain));
-      block.update({ v: f.obs.v ?? 0, a: f.obs.a ?? 0, strain, held: f.held, dt: f.realDt });
+      // Deform only with real motion: a paused block with a v₀ set is still at rest.
+      const moving = f.running;
+      block.update({
+        v: moving ? (f.obs.v ?? 0) : 0,
+        a: moving ? (f.obs.a ?? 0) : 0,
+        dt: f.realDt,
+      });
       particles.update(f.realDt);
     },
 
@@ -66,112 +81,133 @@ export function createShoScene(): MechanicalScene<ShoParams> {
       const v = f.state[1]!;
       const px = f.px;
       const ppx = f.ppx;
+      const cw = blockCenterW(side);
       const style = springStyleFromK(f.params.k, SHO_RANGES.k.min, SHO_RANGES.k.max);
 
-      drawTrack(g, WALL_U, MAX_X + 0.4, side / 2 + 0.012, 0, ppx);
-      drawWall(g, WALL_U, 0, 1.0, ppx, f.hoverId === 'wall');
-      drawSpring(g, WALL_U, x - side / 2, 0, { ...style, glow: f.hoverId === 'spring' }, ppx);
+      drawTrack(g, WALL_U - 0.2, MAX_X + 0.45, FLOOR_W, 0, ppx);
+      drawWall(g, WALL_U, FLOOR_W, WALL_HEIGHT, ppx, f.hoverId === 'wall');
+      // Attach to the drawn (squashed) face so the spring never cuts into the block.
+      const face = x - (side / 2) * block.scaleX(f.serious);
+      drawSpring(g, WALL_U, face, cw, { ...style, glow: f.hoverId === 'spring' }, ppx);
 
       block.draw(g, {
         u: x,
-        w: 0,
+        w: cw,
         side,
         px: ppx,
         serious: f.serious,
         glow: f.hoverId === 'block',
-        viewAngle: f.view.angle,
-        label: 'm',
       });
+
+      // Position mark on the floor under the block's center.
+      g.strokeStyle = colors.primary;
+      g.lineWidth = 3 * ppx;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(x, FLOOR_W - 0.015);
+      g.lineTo(x, FLOOR_W + 0.04);
+      g.stroke();
 
       // Velocity arrow: editable v₀ while paused, live v (dimmed) while running.
       const { start, tip } = arrowGeom(x, v, side);
       drawArrow(
         g,
         start,
-        0,
+        cw,
         tip,
-        0,
-        { color: colors.warning, widthPx: 4, glow: f.hoverId === 'velocity', dimmed: f.running },
+        cw,
+        { color: colors.primary, widthPx: 4, glow: f.hoverId === 'velocity', dimmed: f.running },
         px,
       );
-      if (!f.running) drawHandle(g, tip, 0, 7, px, f.hoverId === 'velocity');
+      if (!f.running) drawHandle(g, tip, cw, 8, px, f.hoverId === 'velocity');
 
-      particles.draw(g, px);
+      if (!f.serious) particles.draw(g, px);
     },
 
     drawOverlay(g, f: F) {
       const x = f.state[0]!;
       const v = f.state[1]!;
       const view = f.view;
-      const label = {
-        color: colors.text,
-        bg: alpha(colors.surface, 0.9),
-        border: colors.border,
-        font: `500 12px ${fonts.mono}`,
+      const cw = blockCenterW(side);
+      const callout = {
+        bg: colors.ink,
+        font: `500 13px ${fonts.mono}`,
+        leader: colors.ink,
       };
 
-      // x₀ under the rail, v₀ above the block at the arrow tip, "wii!" at the top-left corner.
-      if (f.held && !f.running) {
-        const p = view.toScreen(x, side / 2);
-        drawPillLabel(g, p.x, p.y + 26, `x₀ = ${formatQuantity(x, 'm')}`, {
-          ...label,
-          border: colors.primary,
-        });
-      }
+      // v₀ tag pinned to the block's top; x₀ tag pinned to the floor mark.
       if (!f.running) {
-        const { tip } = arrowGeom(x, v, side);
-        const p = view.toScreen(tip, -side / 2);
-        drawPillLabel(g, p.x, p.y - 20, `v₀ = ${formatQuantity(v, 'm/s')}`, {
-          ...label,
-          color: colors.warning,
-        });
+        const top = view.toScreen(x, cw - side / 2);
+        drawCallout(
+          g,
+          top.x,
+          top.y - 34,
+          [
+            { text: 'v₀ = ', color: colors.textOnDark },
+            { text: `${formatNumber(v)} m/s`, color: colors.accent },
+          ],
+          { ...callout, anchor: top },
+        );
+      }
+      if (f.held && !f.running) {
+        const mark = view.toScreen(x, FLOOR_W + 0.04);
+        drawCallout(
+          g,
+          mark.x,
+          mark.y + 30,
+          [
+            { text: 'x₀ = ', color: colors.textOnDark },
+            { text: `${formatNumber(x)} m`, color: colors.accent },
+          ],
+          { ...callout, anchor: mark },
+        );
       }
       if (f.held && !f.serious) {
-        const p = view.toScreen(x - side / 2, -side / 2);
-        g.font = `600 18px ${fonts.display}`;
-        g.fillStyle = colors.magenta;
-        g.textAlign = 'right';
-        g.textBaseline = 'bottom';
-        g.fillText(f.tr('scene.wii'), p.x - 2, p.y - 4);
+        const p = view.toScreen(x - side / 2, cw - side / 2);
+        drawExclamation(g, p.x - 4, p.y - 4, f.tr('scene.wii'));
       }
 
       // Clock.
-      g.font = `500 13px ${fonts.mono}`;
-      g.fillStyle = colors.textMuted;
+      g.font = `500 15px ${fonts.mono}`;
+      g.fillStyle = colors.text;
       g.textAlign = 'left';
       g.textBaseline = 'top';
-      g.fillText(`t = ${formatQuantity(f.t, 's')}`, 16, 14);
+      g.fillText(`t = ${formatNumber(f.t)} s`, 22, 20);
     },
 
     hit(pt: Vec2, f: F): Hit | null {
       const x = f.state[0]!;
       const v = f.state[1]!;
+      const cw = blockCenterW(side);
+      const dw = pt.y - cw;
       const tol = 4 * f.px;
-      if (!f.running) {
-        const { tip } = arrowGeom(x, v, side);
-        if (Math.hypot(pt.x - tip, pt.y) < 12 * f.px)
-          return { objectId: 'velocity', role: 'velocityHandle' };
+      const { start, tip } = arrowGeom(x, v, side);
+      if (!f.running && Math.hypot(pt.x - tip, dw) < 13 * f.px) {
+        return { objectId: 'velocity', role: 'velocityHandle' };
       }
-      if (Math.abs(pt.x - x) <= side / 2 + tol && Math.abs(pt.y) <= side / 2 + tol) {
+      if (Math.abs(pt.x - x) <= side / 2 + tol && Math.abs(dw) <= side / 2 + tol) {
         return { objectId: 'block', role: 'body' };
       }
-      const { start, tip } = arrowGeom(x, v, side);
-      if (
-        Math.abs(pt.y) < 6 * f.px &&
-        pt.x >= Math.min(start, tip) &&
-        pt.x <= Math.max(start, tip)
-      ) {
+      if (Math.abs(dw) < 6 * f.px && pt.x >= Math.min(start, tip) && pt.x <= Math.max(start, tip)) {
         return { objectId: 'velocity', role: 'object' };
       }
-      if (Math.abs(pt.y) < 0.09 && pt.x > WALL_U && pt.x < x - side / 2)
+      if (Math.abs(dw) < 0.09 && pt.x > WALL_U && pt.x < x - side / 2) {
         return { objectId: 'spring', role: 'object' };
-      if (pt.x <= WALL_U && pt.x >= WALL_U - 0.12 && Math.abs(pt.y) <= 0.5)
+      }
+      if (
+        pt.x <= WALL_U &&
+        pt.x >= WALL_U - 0.17 &&
+        pt.y >= FLOOR_W - WALL_HEIGHT &&
+        pt.y <= FLOOR_W
+      ) {
         return { objectId: 'wall', role: 'object' };
+      }
       return null;
     },
 
     onFling(v, f: F) {
-      particles.burst(f.state[0]! - Math.sign(v) * side * 0.5, 0, v);
+      if (f.serious) return;
+      particles.burst(f.state[0]! - Math.sign(v) * side * 0.5, blockCenterW(side), v);
     },
   };
   return scene;

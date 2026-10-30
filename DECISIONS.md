@@ -9,7 +9,7 @@ Minor, reversible decisions taken during implementation, and why.
 - **Self-hosted fonts via `@fontsource`** (Fredoka, Inter, JetBrains Mono): works offline and lets the canvas
   wait on `document.fonts` before drawing text.
 - **Theme tokens in TS** (`src/render/theme.ts`) and exposed to CSS as custom properties, so canvas and DOM
-  share one palette. `textMuted` lifted from `#9AA3D9` to `#A3ACE0` for ≥ 4.5:1 contrast on `surface`.
+  share one palette.
 - **i18n**: core keys are type-checked from `en.json`; plugin texts are merged under `osc.<id>.*` at
   registration, so adding an oscillator needs no change to the core dictionaries. Missing keys fall back
   to Spanish, then to the key itself. Default language: saved choice, else browser language, else Spanish.
@@ -48,13 +48,28 @@ Minor, reversible decisions taken during implementation, and why.
   Reset goes back to t = 0 and pauses.
 - **Velocity arrow**: starts at the block face, 0.22 m per m/s, editable (with a handle) only while paused;
   while running it shows the live v, dimmed.
-- **Personality**: eyes follow v; stretch along motion when fast, squash at turning points (≤ 9%,
-  area-preserving, centered — the physical position and hit box never change); worried face when the spring
-  strain passes ~55%; gritted teeth "> <" when compressed; spiral eyes above 3 m/s (recovers slowly);
-  "^ ^" + "wheee!" while held; star particles on fling. Blinks and particles use deterministic generators
-  so recordings are reproducible. "Serious mode" draws a plain block labeled m.
+- **Personality** (revised after review, see below): stretch along the motion when fast and squash at
+  turning points, driven by an under-damped spring so it wobbles like jelly (up to ~±30%, area-preserving,
+  anchored on the floor contact — the physical position and hit box never change); star particles on
+  fling; "wheee!" while held. Only real motion deforms the block (a paused block with a v₀ set is at rest).
+  Particles use a seeded generator so recordings are reproducible. "Serious mode" turns all of it off.
 - **Wheel = zoom** (mouse wheel and trackpad pinch, centered on the cursor); background drag pans;
   double-click on empty background resets the view (a toolbar button does too).
+
+## Phase 2 revision (owner's sketch)
+
+- **Light "sketchbook" theme replaces the spec's dark theme**, at the owner's request: ivory paper, 2 px ink
+  outlines, one strong blue (`#1F63F2`) for the spring, velocity and active controls. The plots panel stays
+  dark (a "display" next to the drawing). Hover highlight is pink (`#E8338F`). Brand title in Inter bold
+  with "Multiverse" muted; Fredoka is kept only for the playful "wheee!".
+- **No face and no "m" on the block**: it is a brushed-metal block with chamfered corners and a bevel.
+- **The block rests on the floor** (w = 0.30 m), so its center and the spring axis sit at 0.30 − side/2;
+  the wall stands on the same floor. A blue tick on the floor marks the block's position, a dashed one the
+  equilibrium.
+- **Callouts**: v₀ (above the block) and x₀ (below the floor mark) are dark tags with a leader line.
+- **Spring** is drawn thick (5–11 px) and attaches to the drawn, squashed face so it never cuts into the
+  block.
+- The speed button keeps cycling (no dropdown) as the spec asks.
 
 ## Planned (from the approved plan; detailed when implemented)
 

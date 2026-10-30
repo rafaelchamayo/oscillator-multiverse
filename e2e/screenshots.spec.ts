@@ -35,25 +35,25 @@ test('screenshot sho grabbed (drag x0)', async ({ page }) => {
   await page.mouse.up();
 });
 
-test('screenshot sho compressed (scared) and with v0 arrow', async ({ page }) => {
+test('screenshot sho compressed with v0 arrow', async ({ page }) => {
   await open(page, '/#/sho', 'es');
   await sim(page, 's.setPausedState(-0.95, 2.2);');
   await page.waitForTimeout(500);
   await page.screenshot({ path: 'e2e/screenshots/sho-compressed.png' });
 });
 
-test('screenshot sho stretched (scared)', async ({ page }) => {
+test('screenshot sho stretched with negative v0', async ({ page }) => {
   await open(page, '/#/sho', 'es');
   await sim(page, 's.setPausedState(1.3, -1.0);');
   await page.waitForTimeout(500);
   await page.screenshot({ path: 'e2e/screenshots/sho-stretched.png' });
 });
 
-test('screenshot sho dizzy', async ({ page }) => {
+test('screenshot sho fast (stretched by speed)', async ({ page }) => {
   await open(page, '/#/sho', 'es');
   await sim(page, 's.setPausedState(0, 3.9); s.play();');
   await page.waitForTimeout(160);
-  await page.screenshot({ path: 'e2e/screenshots/sho-dizzy.png' });
+  await page.screenshot({ path: 'e2e/screenshots/sho-fast.png' });
 });
 
 test('screenshot sho serious mode + zoom', async ({ page }) => {

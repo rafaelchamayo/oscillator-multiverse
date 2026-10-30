@@ -12,7 +12,7 @@ interface Particle {
   color: string;
 }
 
-const PALETTE = [colors.accent, colors.magenta, colors.lilac, colors.warning];
+const PALETTE = [colors.primary, colors.accent, colors.warning, colors.highlight];
 
 /**
  * Tiny sparkle bursts (purely decorative). Uses its own seeded generator so a

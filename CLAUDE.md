@@ -34,7 +34,8 @@ size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on s
 - Code, identifiers and comments in English; every UI string goes through i18n (es + en; a test checks parity).
 - Physics is tested numerically (see spec §8). Never close a phase with red tests.
 - Hash routing (`#/<plugin-id>`) for GitHub Pages.
-- Colors/fonts only from `theme.ts` (CSS reads them as `--c-*`, `--f-*`, `--r-*`).
+- Colors/fonts only from `theme.ts` (CSS reads them as `--c-*`, `--f-*`, `--r-*`). Light paper theme for the
+  app and stage, dark panel for plots; no faces on objects.
 - Tests reach into canvas state via `window.__osc` (dev/test only): `debug()`, `pageCoords(u, w)`, and the
   controller methods (`setPausedState`, `play`...) for screenshot setups.
 - Timing-sensitive gestures (fling) are dispatched inside the page in e2e tests; Playwright's own latency can
@@ -60,7 +61,7 @@ size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on s
 
 - [x] Phase 0 — Scaffolding (Vite/React/TS, lint, Vitest, Playwright, theme, tabs, i18n ES/EN)
 - [x] Phase 1 — Physics core (Model/odeModel, RK4, SimulationLoop, SHO + damped-driven, §8 tests)
-- [x] Phase 2 — SHO scene (character block, helix spring, drag/fling/grab, v₀ arrow, toolbar, zoom/pan)
+- [x] Phase 2 — SHO scene (metal block with squash & stretch, helix spring, drag/fling/grab, v₀ arrow, toolbar, zoom/pan; light sketchbook theme)
 - [ ] Phase 3 — Trace and plots
 - [ ] Phase 4 — Hover, popovers, ODE
 - [ ] Phase 5 — Damped driven oscillator

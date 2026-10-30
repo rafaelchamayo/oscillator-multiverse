@@ -186,7 +186,8 @@ export class SimController<P> {
   debug() {
     const k = this.spec.model;
     const s = this.state;
-    const p = this.view.toScreen(k.getPos(s), 0);
+    const bodyW = this.scene.bodyW(this.params);
+    const p = this.view.toScreen(k.getPos(s), bodyW);
     const rect = this.canvas?.getBoundingClientRect();
     return {
       x: k.getPos(s),
@@ -199,6 +200,7 @@ export class SimController<P> {
       ic: { ...this.ic },
       zoom: this.view.zoom,
       pxPerMeter: this.view.pxPerMeter,
+      bodyW,
       block: { x: (rect?.left ?? 0) + p.x, y: (rect?.top ?? 0) + p.y },
     };
   }

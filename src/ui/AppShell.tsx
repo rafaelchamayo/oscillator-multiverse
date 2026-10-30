@@ -3,6 +3,7 @@ import { useT } from '../i18n/useT';
 import { getPlugin, getPlugins } from '../oscillators/registry';
 import { LangSwitch } from './LangSwitch';
 import { SimStage } from './SimStage';
+import { LogoWave } from './icons';
 import { Tabs } from './Tabs';
 import { navigate, useHashRoute } from './useHashRoute';
 
@@ -23,9 +24,9 @@ export function AppShell() {
       <header className="header">
         <div className="brand">
           <span className="brand__logo" aria-hidden>
-            ∿
+            <LogoWave />
           </span>
-          <span className="brand__title">{t('app.title')}</span>
+          <BrandTitle text={t('app.title')} />
         </div>
         <Tabs plugins={plugins} activeId={active.id} />
         <LangSwitch />
@@ -48,5 +49,16 @@ export function AppShell() {
         <aside className="side-panel" aria-hidden />
       </main>
     </div>
+  );
+}
+
+/** Brand name with the last word in the muted tone ("Oscillator **Multiverse**"). */
+function BrandTitle({ text }: { text: string }) {
+  const i = text.lastIndexOf(' ');
+  return (
+    <span className="brand__title">
+      {i < 0 ? text : text.slice(0, i + 1)}
+      {i >= 0 && <span className="brand__title-muted">{text.slice(i + 1)}</span>}
+    </span>
   );
 }

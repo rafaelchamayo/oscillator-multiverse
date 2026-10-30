@@ -13,7 +13,7 @@ export interface SpringStyle {
 /** Visual spring properties from k: stiffer → more coils and a thicker wire. */
 export function springStyleFromK(k: number, kMin: number, kMax: number): Omit<SpringStyle, 'glow'> {
   const f = Math.min(1, Math.max(0, (k - kMin) / (kMax - kMin)));
-  return { coils: Math.round(10 + 12 * f), radius: 0.08, widthPx: 2 + 4.5 * f };
+  return { coils: Math.round(10 + 12 * f), radius: 0.09, widthPx: 5 + 6 * f };
 }
 
 /**
@@ -53,21 +53,18 @@ export function drawSpring(
   g.lineJoin = 'round';
 
   if (style.glow) {
-    g.strokeStyle = alpha(colors.magenta, 0.35);
+    g.strokeStyle = alpha(colors.highlight, 0.35);
     g.lineWidth = lw + 8 * px;
     strokePath(g, pts, u0, u1, w, lead, () => true);
   }
 
   // Back strands.
-  g.strokeStyle = alpha(colors.purple, 0.6);
-  g.lineWidth = lw * 0.75;
+  g.strokeStyle = colors.primaryDeep;
+  g.lineWidth = lw * 0.85;
   strokeSegments(g, pts, (p) => !p.front);
 
-  // Leads and front strands.
-  const grad = g.createLinearGradient(0, w - r, 0, w + r);
-  grad.addColorStop(0, colors.lilac);
-  grad.addColorStop(1, colors.accent);
-  g.strokeStyle = grad;
+  // Leads and front strands, with a thin shine so the wire reads as a tube.
+  g.strokeStyle = colors.primary;
   g.lineWidth = lw;
   g.beginPath();
   g.moveTo(u0, w);
@@ -75,6 +72,9 @@ export function drawSpring(
   g.moveTo(u1 - lead, w);
   g.lineTo(u1, w);
   g.stroke();
+  strokeSegments(g, pts, (p) => p.front);
+  g.strokeStyle = alpha('#FFFFFF', 0.35);
+  g.lineWidth = lw * 0.28;
   strokeSegments(g, pts, (p) => p.front);
 }
 

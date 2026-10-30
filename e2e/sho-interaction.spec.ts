@@ -11,6 +11,7 @@ type Debug = {
   ic: { x0: number; v0: number };
   zoom: number;
   pxPerMeter: number;
+  bodyW: number;
   block: { x: number; y: number };
 };
 
@@ -93,7 +94,7 @@ for (const dir of [1, -1]) {
 test('dragging the arrow tip sets v₀ without moving x', async ({ page }) => {
   const d0 = await osc(page);
   const side = 0.34; // blockSide(m = 2)
-  const tip = await pageCoords(page, d0.x + side / 2, 0);
+  const tip = await pageCoords(page, d0.x + side / 2, d0.bodyW);
   await page.mouse.move(tip.x, tip.y);
   await page.mouse.down();
   await page.mouse.move(tip.x + 0.22 * d0.pxPerMeter, tip.y, { steps: 8 }); // ARROW_SCALE per 1 m/s
@@ -115,7 +116,7 @@ test('grabbing during the run suspends integration; releasing resumes it', async
   expect(grabbed.held).toBe(true);
   expect(grabbed.loopHeld).toBe(true);
 
-  const target = await pageCoords(page, 0.8, 0);
+  const target = await pageCoords(page, 0.8, d0.bodyW);
   await page.mouse.move(target.x, grabbed.block.y, { steps: 10 });
   await page.waitForTimeout(400);
   const during = await osc(page);

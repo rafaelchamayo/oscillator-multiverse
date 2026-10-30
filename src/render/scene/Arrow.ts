@@ -58,15 +58,16 @@ export function drawHandle(
   px: number,
   active: boolean,
 ): void {
-  g.save();
-  g.shadowColor = colors.accent;
-  g.shadowBlur = active ? 18 : 8;
+  const r = (active ? radiusPx + 2 : radiusPx) * px;
   g.beginPath();
-  g.arc(u, w, radiusPx * px, 0, Math.PI * 2);
-  g.fillStyle = active ? colors.accent : alpha(colors.accent, 0.85);
+  g.arc(u, w, r + 3 * px, 0, Math.PI * 2);
+  g.fillStyle = alpha(colors.primary, active ? 0.3 : 0.18);
   g.fill();
-  g.lineWidth = 2 * px;
-  g.strokeStyle = colors.text;
+  g.beginPath();
+  g.arc(u, w, r, 0, Math.PI * 2);
+  g.fillStyle = colors.primary;
+  g.fill();
+  g.lineWidth = 2.5 * px;
+  g.strokeStyle = '#FFFFFF';
   g.stroke();
-  g.restore();
 }

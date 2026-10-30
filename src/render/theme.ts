@@ -2,26 +2,34 @@
  * Design tokens. Single source of truth for both the DOM (exposed as CSS custom
  * properties by `applyThemeToDocument`) and the canvas renderers (imported directly).
  *
- * Palette from the spec, with two contrast adjustments:
- *  - `textMuted` lifted from #9AA3D9 to #A3ACE0 so small UI text on `surface` stays ≥ 4.5:1.
- *  - `border` is used for outlines only, never as a text color.
+ * Light "sketchbook" theme (replaces the spec's dark theme at the owner's request, see
+ * DECISIONS.md): ivory paper, ink outlines, a single strong blue accent. The plot panel stays
+ * dark, like a small display next to the drawing. All text/background pairs are ≥ 4.5:1.
  */
 export const colors = {
-  bg: '#0B1026', // night blue, top of background gradient
-  bgDeep: '#151A3D', // bottom of background gradient
-  surface: '#1C2250', // panels, popovers
-  surfaceRaised: '#242B63', // hovered surfaces, chips on
-  border: '#2E3675',
-  primary: '#4C8DFF',
-  accent: '#3DE1FF', // cyan
-  purple: '#9B6BFF',
-  lilac: '#C9A7FF',
-  magenta: '#FF6BD6', // highlight
-  text: '#E8ECFF',
-  textMuted: '#A3ACE0',
-  success: '#5BE3A8',
-  warning: '#FFC86B',
-  danger: '#FF6B8A',
+  bg: '#F2F0EA', // paper
+  bgDeep: '#E8E5DC', // paper, shaded edge of the background gradient
+  surface: '#FBFAF7', // stage, toolbar, popovers
+  surfaceRaised: '#E7EEFF', // hovered / active controls (blue tint)
+  panelDark: '#24272E', // plots panel
+  panelDarkRaised: '#30343D',
+  ink: '#16181D', // outlines and primary text
+  border: '#16181D',
+  borderSoft: '#D6D2C7',
+  primary: '#1F63F2', // accent blue: spring, velocity, active controls
+  primaryDeep: '#143C9E', // spring back strands, pressed states
+  primarySoft: '#CFDDFF',
+  accent: '#5B9BFF', // blue that reads on the dark panel and dark callouts
+  metalLight: '#F1F2F4',
+  metal: '#CDD0D6',
+  metalDark: '#8E939C',
+  highlight: '#E8338F', // hover glow (object ↔ ODE term)
+  text: '#16181D',
+  textMuted: '#5A606D',
+  textOnDark: '#F3F4F8',
+  success: '#17A673',
+  warning: '#E19A12',
+  danger: '#E5484D',
 } as const;
 
 export const fonts = {
@@ -32,6 +40,9 @@ export const fonts = {
 
 export const radii = { sm: 8, md: 12, lg: 18, pill: 999 } as const;
 
+/** Outline width (CSS px) of "ink" strokes on panels and controls. */
+export const inkWidth = 2;
+
 export const motion = {
   fast: 120,
   normal: 220,
@@ -40,10 +51,10 @@ export const motion = {
   easeInOut: 'cubic-bezier(0.65, 0, 0.35, 1)',
 } as const;
 
-/** Soft glow used around interactive elements (CSS box-shadow syntax). */
+/** Focus/hover rings around interactive elements (CSS box-shadow syntax). */
 export const glow = {
-  primary: `0 0 0 1px ${colors.primary}66, 0 0 18px ${colors.primary}55`,
-  magenta: `0 0 0 1px ${colors.magenta}88, 0 0 22px ${colors.magenta}66`,
+  primary: `0 0 0 3px ${colors.primarySoft}`,
+  highlight: `0 0 0 3px ${colors.highlight}55`,
 } as const;
 
 function kebab(s: string): string {
@@ -54,10 +65,11 @@ export function applyThemeToDocument(root: HTMLElement = document.documentElemen
   for (const [k, v] of Object.entries(colors)) root.style.setProperty(`--c-${kebab(k)}`, v);
   for (const [k, v] of Object.entries(fonts)) root.style.setProperty(`--f-${k}`, v);
   for (const [k, v] of Object.entries(radii)) root.style.setProperty(`--r-${k}`, `${v}px`);
+  root.style.setProperty('--ink-width', `${inkWidth}px`);
   root.style.setProperty('--ease-out', motion.easeOut);
   root.style.setProperty('--ease-in-out', motion.easeInOut);
   root.style.setProperty('--t-fast', `${motion.fast}ms`);
   root.style.setProperty('--t-normal', `${motion.normal}ms`);
   root.style.setProperty('--glow-primary', glow.primary);
-  root.style.setProperty('--glow-magenta', glow.magenta);
+  root.style.setProperty('--glow-highlight', glow.highlight);
 }

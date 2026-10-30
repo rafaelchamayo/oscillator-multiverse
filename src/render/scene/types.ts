@@ -49,6 +49,8 @@ export interface Scene<S, P> {
 /** Extra hooks for 1-DOF mechanical scenes with a draggable body and velocity arrow. */
 export interface MechanicalScene<P> extends Scene<Float64Array, P> {
   clampX(x: number, params: P): number;
+  /** Cross-axis coordinate (w) of the body's center: where the hand grabs it. */
+  bodyW(params: P): number;
   /** v₀ implied by dragging the arrow tip to scene coordinate `u`. */
   velocityFromHandle(u: number, x: number, params: P): number;
 }
