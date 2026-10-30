@@ -18,12 +18,36 @@
     "reset": "Reiniciar",
     "speed": "Velocidad: {speed}×",
     "serious": "Modo serio (sin personalidad)",
-    "resetView": "Restablecer vista"
+    "resetView": "Restablecer vista",
+    "perspective": "Vista vertical",
+    "perspectiveOff": "Vista horizontal",
+    "gravity": "Gravedad",
+    "window": "Ventana de la traza: {s} s"
   },
   "keys": {
     "space": "Espacio"
   },
   "scene": {
-    "wii": "¡wii!"
+    "wii": "¡wii!",
+    "equilibrium": "equilibrio"
+  },
+  "plots": {
+    "label": "Gráficas",
+    "chips": {
+      "x": "x(t)",
+      "v": "v(t)",
+      "a": "a(t)",
+      "energy": "Energía",
+      "phase": "Fases"
+    },
+    "panels": {
+      "motion": "Movimiento",
+      "energy": "Energía",
+      "phase": "Espacio de fases"
+    },
+    "empty": "Activa una gráfica con los chips de arriba.",
+    "window": "{s} s",
+    "time": "t (s)",
+    "manual": "tramo a mano"
   }
 }

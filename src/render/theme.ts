@@ -32,6 +32,20 @@ export const colors = {
   danger: '#E5484D',
 } as const;
 
+/** Series colors on the dark plots panel (and their counterparts on paper). */
+export const series = {
+  x: '#5B9BFF',
+  v: '#3DDC97',
+  a: '#FFB547',
+  K: '#5B9BFF',
+  U: '#FFB547',
+  E: '#F3F4F8',
+  manual: '#FF5FB0',
+  grid: '#3A3F4B',
+  axis: '#6B7280',
+  label: '#AEB4C2',
+} as const;
+
 export const fonts = {
   display: "'Fredoka', 'Baloo 2', system-ui, sans-serif",
   ui: "'Inter', system-ui, -apple-system, sans-serif",

@@ -1,3 +1,4 @@
+import type { History } from '../../core/sim/History';
 import type { TKey } from '../../i18n/dict';
 import type { Observables } from '../../models/types';
 import type { SceneBounds, Vec2, ViewTransform } from '../view';
@@ -22,6 +23,13 @@ export interface FrameInfo<S, P> {
   hoverId: string | null;
   /** Real seconds since the last frame (animations), 0 when frozen. */
   realDt: number;
+  history: History;
+  /** Visible plots by chip id (the scene draws the x(t) trace when `chips.x`). */
+  chips: Record<string, boolean>;
+  /** Seconds of history shown by traces. */
+  window: number;
+  /** Pointer in scene coordinates while it is over the stage. */
+  pointer: Vec2 | null;
   tr: (key: TKey, vars?: Record<string, string | number>) => string;
 }
 
@@ -33,8 +41,8 @@ export interface Hit {
 }
 
 export interface Scene<S, P> {
-  /** Region shown by the default view. */
-  bounds(params: P): SceneBounds;
+  /** Region shown by the default view (may depend on params, e.g. the gravity sag). */
+  bounds(f: FrameInfo<S, P>): SceneBounds;
   /** Advance purely visual animation state (eyes, particles...). */
   update(f: FrameInfo<S, P>): void;
   /** Draw in scene coordinates (the context already has the view transform). */

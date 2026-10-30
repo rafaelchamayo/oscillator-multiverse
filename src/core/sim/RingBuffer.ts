@@ -23,6 +23,10 @@ export class RingBuffer {
     return this.data[(this.start + i) % this.capacity]!;
   }
 
+  set(i: number, v: number): void {
+    this.data[(this.start + i) % this.capacity] = v;
+  }
+
   last(): number {
     return this.get(this.len - 1);
   }

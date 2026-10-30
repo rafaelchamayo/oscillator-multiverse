@@ -3,6 +3,7 @@ import { PointerController } from '../interaction/PointerController';
 import type { OscillatorPlugin } from '../oscillators/types';
 import { useT } from '../i18n/useT';
 import { SimController } from '../runtime/SimController';
+import { PlotPanel } from './PlotPanel';
 import { Toolbar } from './Toolbar';
 import { useShortcuts } from './useShortcuts';
 
@@ -38,10 +39,13 @@ export function SimStage({ plugin }: Props) {
   }, [sim]);
 
   return (
-    <section className="stage stage--sim">
-      <h1 className="sr-only">{t(`osc.${plugin.id}.title`)}</h1>
-      <canvas ref={canvasRef} className="stage__canvas" data-testid="stage-canvas" />
-      <Toolbar sim={sim} />
-    </section>
+    <>
+      <section className="stage stage--sim">
+        <h1 className="sr-only">{t(`osc.${plugin.id}.title`)}</h1>
+        <canvas ref={canvasRef} className="stage__canvas" data-testid="stage-canvas" />
+        <Toolbar sim={sim} />
+      </section>
+      <PlotPanel sim={sim} />
+    </>
   );
 }

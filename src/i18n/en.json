@@ -18,12 +18,36 @@
     "reset": "Reset",
     "speed": "Speed: {speed}×",
     "serious": "Serious mode (no personality)",
-    "resetView": "Reset view"
+    "resetView": "Reset view",
+    "perspective": "Vertical view",
+    "perspectiveOff": "Horizontal view",
+    "gravity": "Gravity",
+    "window": "Trace window: {s} s"
   },
   "keys": {
     "space": "Space"
   },
   "scene": {
-    "wii": "wheee!"
+    "wii": "wheee!",
+    "equilibrium": "equilibrium"
+  },
+  "plots": {
+    "label": "Plots",
+    "chips": {
+      "x": "x(t)",
+      "v": "v(t)",
+      "a": "a(t)",
+      "energy": "Energy",
+      "phase": "Phase"
+    },
+    "panels": {
+      "motion": "Motion",
+      "energy": "Energy",
+      "phase": "Phase space"
+    },
+    "empty": "Turn on a plot with the chips above.",
+    "window": "{s} s",
+    "time": "t (s)",
+    "manual": "hand-driven"
   }
 }

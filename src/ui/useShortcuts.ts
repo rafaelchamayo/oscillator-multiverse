@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { SimController } from '../runtime/SimController';
+import { useSimStore } from '../state/simStore';
 
 /** Global keyboard shortcuts for the active simulation. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,6 +17,8 @@ export function useShortcuts(sim: SimController<any>): void {
         sim.toggle();
       } else if (e.key === 'r' || e.key === 'R') {
         sim.reset();
+      } else if ((e.key === 'v' || e.key === 'V') && sim.spec.setGravity) {
+        useSimStore.getState().togglePerspective();
       }
     };
     window.addEventListener('keydown', onKey);

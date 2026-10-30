@@ -71,15 +71,30 @@ Minor, reversible decisions taken during implementation, and why.
   block.
 - The speed button keeps cycling (no dropdown) as the spec asks.
 
+## Phase 3 — Trace and plots
+
+- **Vertical perspective** (implemented as planned): a pure −90° rotation animated over 600 ms (ease-in-out);
+  the view refits smoothly every frame (`ViewTransform.fitSmooth`). Gravity is on by default when entering
+  the vertical view and g = 0 in the horizontal one. Shortcut: V.
+- **Switching gravity keeps the motion as seen**: displacement from equilibrium, velocity, time and history
+  are preserved. x keeps its physical meaning (measured from the spring's natural length), so x, x₀ and the
+  stored x samples all shift by Δx_eq = −mg/k. Without this, a soft spring (m = 2 kg, k = 8 N/m sags 2.45 m)
+  would start a 3 m oscillation through the wall the moment the view rotates.
+- **Scenery shifted by x_eq**: wall, floor and paper are drawn at offset x_eq, so the spring at rest looks the
+  same in both views (a 2.45 m sag would not fit the drawn spring). Labels on the paper show the true x.
+- **Energy relative to equilibrium**: plots and the stacked bar show K, U_eq = ½k(x − x_eq)² and
+  E = K + U_eq, the energy of the oscillation. With gravity U = ½kx² + mgx differs from U_eq by a constant;
+  without gravity they are identical. The model still exposes U and E.
+- **Paper strip of fixed length (2 m)**: the trace window (4/8/16 s) sets the paper speed instead of the strip
+  length, so changing the window never rescales the scene. 8 s → 0.25 m/s.
+- **History**: 120 samples per simulated second (every 5 steps), 40 s capacity; hand-held samples are drawn
+  dashed in pink on the paper and in every plot.
+- **Toolbar inset**: the view fits the scene above the floating toolbar (`ViewTransform.insetBottom`).
+
 ## Planned (from the approved plan; detailed when implemented)
 
 - **Driving force**: option (a), a direct force F₀ cos ωt on the block; the crank is visual only. The ODE then
   matches exactly what is drawn.
-- **Vertical perspective**: a pure −90° rotation of the scene. The wall/motor ends at the bottom, the block
-  rests on the spring, the trace exits to the right and x is positive upwards (classic x vs t plot). With
-  gravity the ODE reads `m ẍ + k x = −m g` and the equilibrium sits at x = −mg/k. A "hanging" layout would need
-  a reflection instead of a rotation, which cannot be animated as a smooth rotation.
-- **Gravity** toggle, on by default when entering the vertical view; g = 0 in the horizontal view.
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by
   the same RK4 step.
 - **Recording**: `captureStream()` does not capture DOM, so presentation mode composes scene, plots and the

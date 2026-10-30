@@ -1,5 +1,6 @@
-import type { Dict, Lang } from '../i18n/dict';
+import type { Dict, Lang, TKey } from '../i18n/dict';
 import type { Kinematic, MechanicalInit, Model } from '../models/types';
+import type { Plot } from '../render/plots/types';
 import type { MechanicalScene } from '../render/scene/types';
 
 /**
@@ -14,6 +15,33 @@ export interface MechanicalSimSpec<P> {
   /** Fastest initial velocity the hand can impose (m/s). */
   maxSpeed: number;
   createScene(): MechanicalScene<P>;
+  /** Observables recorded in the history (for traces and plots). */
+  historyKeys: string[];
+  /** Plot toggles shown as chips, in order. */
+  chips: ChipDef[];
+  /** Side-panel plots; each is visible while any of its chips is on. */
+  panels: PanelDef[];
+  /** Present when the model supports the vertical view with gravity. */
+  setGravity?(params: P, g: number): void;
+  /** Rest position of the body for these params (where the gravity sag puts it). */
+  equilibrium?(params: P): number;
+}
+
+export interface ChipDef {
+  id: string;
+  labelKey: TKey;
+  defaultOn: boolean;
+  /** Dot color in the chip. */
+  color: string;
+}
+
+export interface PanelDef {
+  id: string;
+  titleKey: TKey;
+  chips: string[];
+  create(): Plot;
+  /** Height weight in the stacked panel (default 1). */
+  weight?: number;
 }
 
 /** An oscillator tab: identity, texts and (once implemented) its simulation. */

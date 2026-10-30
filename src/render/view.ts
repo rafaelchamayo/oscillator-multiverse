@@ -24,6 +24,8 @@ export class ViewTransform {
   panX = 0;
   panY = 0;
   angle = 0;
+  /** Screen pixels at the bottom covered by floating UI (toolbar): fit and center above them. */
+  insetBottom = 0;
   focus: Vec2 = { x: 0, y: 0 };
   private bounds: SceneBounds = { uMin: -1, uMax: 1, wMin: -1, wMax: 1 };
 
@@ -55,14 +57,38 @@ export class ViewTransform {
     const sw = bw * c + bh * s;
     const sh = bw * s + bh * c;
     const avail = 1 - 2 * margin;
-    this.fitScale = Math.min((this.width * avail) / sw, (this.height * avail) / sh);
+    this.fitScale = Math.min(
+      (this.width * avail) / sw,
+      ((this.height - this.insetBottom) * avail) / sh,
+    );
     this.focus = { x: (b.uMin + b.uMax) / 2, y: (b.wMin + b.wMax) / 2 };
+  }
+
+  /**
+   * Moves fitScale and focus towards the fit of `b` (rate in 1/s), so bound changes and the
+   * perspective rotation re-frame the scene smoothly. `snap` jumps straight there.
+   */
+  fitSmooth(b: SceneBounds, dt: number, snap = false, rate = 8): void {
+    const prevScale = this.fitScale;
+    const prevFocus = this.focus;
+    this.fit(b);
+    if (snap) return;
+    const k = 1 - Math.exp(-rate * dt);
+    this.fitScale = prevScale + (this.fitScale - prevScale) * k;
+    this.focus = {
+      x: prevFocus.x + (this.focus.x - prevFocus.x) * k,
+      y: prevFocus.y + (this.focus.y - prevFocus.y) * k,
+    };
   }
 
   resetView(): void {
     this.zoom = 1;
     this.panX = 0;
     this.panY = 0;
+  }
+
+  private get centerY(): number {
+    return (this.height - this.insetBottom) / 2;
   }
 
   toScreen(u: number, w: number): Vec2 {
@@ -72,13 +98,13 @@ export class ViewTransform {
     const s = Math.sin(this.angle);
     return {
       x: this.width / 2 + this.panX + this.scale * (c * du - s * dw),
-      y: this.height / 2 + this.panY + this.scale * (s * du + c * dw),
+      y: this.centerY + this.panY + this.scale * (s * du + c * dw),
     };
   }
 
   toScene(x: number, y: number): Vec2 {
     const dx = (x - this.width / 2 - this.panX) / this.scale;
-    const dy = (y - this.height / 2 - this.panY) / this.scale;
+    const dy = (y - this.centerY - this.panY) / this.scale;
     const c = Math.cos(this.angle);
     const s = Math.sin(this.angle);
     return { x: this.focus.x + c * dx + s * dy, y: this.focus.y - s * dx + c * dy };

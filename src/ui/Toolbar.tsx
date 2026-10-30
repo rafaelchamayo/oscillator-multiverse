@@ -1,7 +1,15 @@
 import { useT } from '../i18n/useT';
 import type { SimController } from '../runtime/SimController';
 import { useSimStore } from '../state/simStore';
-import { FaceIcon, PauseIcon, PlayIcon, ResetIcon, ViewIcon } from './icons';
+import {
+  FaceIcon,
+  GravityIcon,
+  PauseIcon,
+  PlayIcon,
+  ResetIcon,
+  RotateIcon,
+  ViewIcon,
+} from './icons';
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,6 +22,11 @@ export function Toolbar({ sim }: Props) {
   const speed = useSimStore((s) => s.speed);
   const serious = useSimStore((s) => s.serious);
   const setSerious = useSimStore((s) => s.setSerious);
+  const vertical = useSimStore((s) => s.perspective === 'vertical');
+  const togglePerspective = useSimStore((s) => s.togglePerspective);
+  const gravity = useSimStore((s) => s.gravity);
+  const setGravity = useSimStore((s) => s.setGravity);
+  const canRotate = !!sim.spec.setGravity;
 
   return (
     <div className="toolbar" role="toolbar" aria-label={t('toolbar.label')}>
@@ -49,6 +62,32 @@ export function Toolbar({ sim }: Props) {
         {speed}×
       </button>
       <span className="toolbar__sep" aria-hidden />
+      {canRotate && (
+        <button
+          type="button"
+          className="toolbar__btn"
+          data-testid="perspective"
+          aria-pressed={vertical}
+          aria-label={t('toolbar.perspective')}
+          title={`${vertical ? t('toolbar.perspectiveOff') : t('toolbar.perspective')} (V)`}
+          onClick={togglePerspective}
+        >
+          <RotateIcon />
+        </button>
+      )}
+      {canRotate && vertical && (
+        <button
+          type="button"
+          className="toolbar__btn"
+          data-testid="gravity"
+          aria-pressed={gravity}
+          aria-label={t('toolbar.gravity')}
+          title={t('toolbar.gravity')}
+          onClick={() => setGravity(!gravity)}
+        >
+          <GravityIcon />
+        </button>
+      )}
       <button
         type="button"
         className="toolbar__btn toolbar__btn--ring"

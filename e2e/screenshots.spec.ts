@@ -66,6 +66,80 @@ test('screenshot sho serious mode + zoom', async ({ page }) => {
   await page.screenshot({ path: 'e2e/screenshots/sho-serious-zoom.png' });
 });
 
+test('screenshot sho trace and plots (running)', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  await sim(page, 's.loop.speed = 4; s.play();');
+  await page.waitForTimeout(2600);
+  await sim(page, 's.loop.speed = 1;');
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: 'e2e/screenshots/sho-trace.png' });
+});
+
+test('screenshot sho hand-driven segment + paper hover', async ({ page }) => {
+  await open(page, '/#/sho', 'en');
+  await sim(page, 's.loop.speed = 2; s.play();');
+  await page.waitForTimeout(1200);
+  // Grab the running block in-page (Playwright's latency would miss the moving block) and
+  // move it by hand for a while: those samples are drawn dashed in pink.
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const s = (window as any).__osc;
+        const x0 = s.state[0] as number;
+        s.beginHold(x0);
+        const start = performance.now();
+        const id = setInterval(() => {
+          const f = (performance.now() - start) / 1000;
+          const x = x0 + 0.6 * Math.sin(f * 2.2);
+          s.holdTarget = { x, v: 0 };
+          if (f > 1.6) {
+            clearInterval(id);
+            s.endHold(x, 0);
+            done();
+          }
+        }, 16);
+      }),
+  );
+  await page.waitForTimeout(1000);
+  await sim(page, 's.pause();');
+  // Hover the trace one second back on the paper.
+  const p = (await sim(
+    page,
+    `const h = s.history; const i = h.indexAt(s.loop.t - 1); const w = 0.38 + (s.loop.t - h.t.get(i)) * 0.25; return s.pageCoords(h.get('x').get(i), w);`,
+  )) as { x: number; y: number };
+  await page.mouse.move(p.x, p.y);
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: 'e2e/screenshots/sho-manual-hover.png' });
+});
+
+test('screenshot sho phase + acceleration plots', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  await page.getByTestId('chip-a').click();
+  await page.getByTestId('chip-phase').click();
+  await sim(page, 's.setPausedState(0.6, 1.2); s.loop.speed = 4; s.play();');
+  await page.waitForTimeout(2200);
+  await page.screenshot({ path: 'e2e/screenshots/sho-phase.png' });
+});
+
+test('screenshot sho vertical with gravity', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  await sim(page, 's.loop.speed = 4; s.play();');
+  await page.waitForTimeout(1200);
+  await page.getByTestId('perspective').click();
+  await page.waitForTimeout(1600);
+  await page.screenshot({ path: 'e2e/screenshots/sho-vertical.png' });
+});
+
+test('screenshot sho mid-rotation', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  await sim(page, 's.loop.speed = 4; s.play();');
+  await page.waitForTimeout(1500);
+  await page.getByTestId('perspective').click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'e2e/screenshots/sho-rotating.png' });
+});
+
 test('screenshot damped-driven-es (placeholder)', async ({ page }) => {
   await open(page, '/#/damped-driven', 'es');
   await page.screenshot({ path: 'e2e/screenshots/damped-driven-es.png' });

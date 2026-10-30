@@ -29,6 +29,10 @@ Scene coordinates are meters: u along the oscillation, w across it (+w is down a
 size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on screen). Upright text goes in
 `drawOverlay` (CSS pixels).
 
+Plots: a plugin's `sim` declares `historyKeys`, `chips` and `panels` (each panel = a `Plot` from
+`src/render/plots/`, shown while any of its chips is on). `SimController` samples a `History` on every step and
+draws registered plot canvases each frame. Gravity changes go through `spec.setGravity` + `spec.equilibrium`.
+
 ## Conventions
 
 - Code, identifiers and comments in English; every UI string goes through i18n (es + en; a test checks parity).
@@ -62,7 +66,7 @@ size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on s
 - [x] Phase 0 — Scaffolding (Vite/React/TS, lint, Vitest, Playwright, theme, tabs, i18n ES/EN)
 - [x] Phase 1 — Physics core (Model/odeModel, RK4, SimulationLoop, SHO + damped-driven, §8 tests)
 - [x] Phase 2 — SHO scene (metal block with squash & stretch, helix spring, drag/fling/grab, v₀ arrow, toolbar, zoom/pan; light sketchbook theme)
-- [ ] Phase 3 — Trace and plots
+- [x] Phase 3 — Trace and plots (paper trace, side-panel plots with chips, vertical view + gravity)
 - [ ] Phase 4 — Hover, popovers, ODE
 - [ ] Phase 5 — Damped driven oscillator
 - [ ] Phase 6 — Presentation mode and polish

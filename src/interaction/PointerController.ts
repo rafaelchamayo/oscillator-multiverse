@@ -85,6 +85,7 @@ export class PointerController<P> {
     const pt = this.scenePoint(e);
     const sim = this.sim;
     const m = this.mode;
+    sim.pointer = pt;
     if (m.kind === 'none') {
       const hit = sim.scene.hit(pt, sim.frameInfo(0));
       sim.hoverId = hit?.objectId ?? null;
@@ -137,6 +138,7 @@ export class PointerController<P> {
   };
 
   private onLeave = (): void => {
+    this.sim.pointer = null;
     if (this.mode.kind === 'none') this.sim.hoverId = null;
   };
 
