@@ -14,6 +14,8 @@ export interface PlotCtx {
   dt: number;
   /** Current model parameters (analytic overlays). */
   params: Record<string, number>;
+  /** Grid lines and tick labels (presentation mode can hide them). */
+  axes: boolean;
   tr: (key: TKey, vars?: Record<string, string | number>) => string;
 }
 

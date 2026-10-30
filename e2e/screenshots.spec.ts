@@ -217,3 +217,43 @@ test('screenshot damped-driven honey + vertical', async ({ page }) => {
   await page.waitForTimeout(400);
   await page.screenshot({ path: 'e2e/screenshots/dd-vertical-honey.png' });
 });
+
+/** Saves exactly what a recording would capture: the 1920×1080 presentation canvas. */
+async function saveCanvas(page: Page, path: string) {
+  const url = (await page.evaluate(() =>
+    (document.querySelector('[data-testid=present-canvas]') as HTMLCanvasElement).toDataURL(),
+  )) as string;
+  const fs = await import('node:fs');
+  fs.writeFileSync(path, Buffer.from(url.split(',')[1]!, 'base64'));
+}
+
+test('screenshot presentation damped-driven (canvas + page)', async ({ page }) => {
+  await open(page, '/#/damped-driven', 'es');
+  await page.getByTestId('chip-phase').click();
+  await page.getByTestId('chip-vec.net').click();
+  await page.getByTestId('preset-resonance').click();
+  await sim(page, 's.loop.speed = 4;');
+  await page.keyboard.press('p');
+  await page.waitForTimeout(3500);
+  await saveCanvas(page, 'e2e/screenshots/present-dd-canvas.png');
+  await page.screenshot({ path: 'e2e/screenshots/present-dd-page.png' });
+});
+
+test('screenshot presentation sho minimal (no ODE, no axes, solid, serious)', async ({ page }) => {
+  await open(page, '/#/sho', 'en');
+  await page.getByTestId('chip-x').click();
+  await sim(page, 's.setPausedState(0.9, 0); s.play();');
+  await page.keyboard.press('p');
+  for (const id of ['ode', 'axes', 'background', 'personality']) {
+    await page.getByTestId(`present-${id}`).click();
+  }
+  await page.waitForTimeout(1500);
+  await saveCanvas(page, 'e2e/screenshots/present-sho-minimal.png');
+});
+
+test('screenshot shortcuts help', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  await page.keyboard.press('?');
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: 'e2e/screenshots/help.png' });
+});

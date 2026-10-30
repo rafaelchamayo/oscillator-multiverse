@@ -22,7 +22,7 @@ Spec: `prompt_claude_code_oscillator_multiverse.md`. Decisions log: `DECISIONS.m
 7. `src/ui/` — React shell: header, tabs, toolbar, popovers (the only place sliders exist).
 8. `src/i18n/` — `es.json`/`en.json`, `useT()`; core keys are type-checked.
 9. `src/state/uiStore.ts` — Zustand, UI state only. Per-frame sim state lives in a mutable controller.
-10. `src/presentation/` — 1920×1080 presentation stage and WebM recording.
+10. `src/presentation/` — 1920×1080 presentation layout (`compose.ts`), canvas ODE renderer, WebM `Recorder`.
 11. `src/runtime/SimController.ts` — binds a plugin's model + `SimulationLoop` + scene + `ViewTransform` to a canvas and runs rAF.
 
 Scene coordinates are meters: u along the oscillation, w across it (+w is down at angle 0). Physical objects
@@ -74,4 +74,4 @@ The SHO (`src/oscillators/sho/`) is the worked example.
 - [x] Phase 3 — Trace and plots (paper trace, side-panel plots with chips, vertical view + gravity)
 - [x] Phase 4 — Hover, popovers, ODE (object popovers with the only sliders, live KaTeX ODE, term↔object highlight)
 - [x] Phase 5 — Damped driven oscillator (dashpot, crank motor, force vectors, regime badge, steady/transient, resonance sweep, presets)
-- [ ] Phase 6 — Presentation mode and polish
+- [x] Phase 6 — Presentation mode and polish (P: 1920×1080 canvas with options, G: frame-locked WebM recording, `?` shortcuts help)

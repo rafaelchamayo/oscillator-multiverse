@@ -96,7 +96,7 @@ export class TimePlot implements Plot {
       }
       lane.scale.update(lo, hi, ctx.dt);
       const r = lane.rect;
-      drawValueGrid(g, r, lane.scale);
+      if (ctx.axes) drawValueGrid(g, r, lane.scale);
 
       g.save();
       g.beginPath();
@@ -138,7 +138,7 @@ export class TimePlot implements Plot {
     }
 
     if (this.mode === 'overlay') this.drawLegend(g, left, shown);
-    this.drawTimeAxis(g, left, plotW, height - bottom, t0, ctx);
+    if (ctx.axes) this.drawTimeAxis(g, left, plotW, height - bottom, t0, ctx);
 
     // Hover: crosshair at the pointer's time and the value of each series there.
     const hv = ctx.hover;

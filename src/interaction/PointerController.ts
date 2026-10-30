@@ -46,8 +46,7 @@ export class PointerController<P> {
   }
 
   private local(e: { clientX: number; clientY: number }) {
-    const r = this.canvas.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    return this.sim.toLocal(e.clientX, e.clientY);
   }
 
   private scenePoint(e: PointerEvent | MouseEvent) {

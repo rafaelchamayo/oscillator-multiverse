@@ -11,6 +11,17 @@ export function useShortcuts(sim: SimController<any>): void {
       const target = e.target as HTMLElement | null;
       if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))
         return;
+      const ui = useSimStore.getState();
+      if (e.key === 'Escape') {
+        if (ui.helpOpen) ui.setHelpOpen(false);
+        else if (ui.presenting) ui.setPresenting(false);
+        return;
+      }
+      if (e.key === '?') {
+        ui.setHelpOpen(!ui.helpOpen);
+        return;
+      }
+      if (ui.helpOpen) return;
       if (e.code === 'Space') {
         // Avoid also "clicking" a focused toolbar button.
         e.preventDefault();
@@ -18,7 +29,16 @@ export function useShortcuts(sim: SimController<any>): void {
       } else if (e.key === 'r' || e.key === 'R') {
         sim.reset();
       } else if ((e.key === 'v' || e.key === 'V') && sim.spec.setGravity) {
-        useSimStore.getState().togglePerspective();
+        ui.togglePerspective();
+      } else if (e.key === 'p' || e.key === 'P') {
+        ui.setPresenting(!ui.presenting);
+      } else if (e.key === 'g' || e.key === 'G') {
+        // Outside presentation, G opens it and starts recording once its canvas is attached.
+        if (!ui.presenting) {
+          sim.recordOnPresent = true;
+          ui.setPresenting(true);
+        } else if (sim.recording) void sim.stopRecording();
+        else sim.startRecording();
       }
     };
     window.addEventListener('keydown', onKey);

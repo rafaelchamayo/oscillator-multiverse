@@ -4,8 +4,10 @@ import { useSimStore } from '../state/simStore';
 import {
   FaceIcon,
   GravityIcon,
+  HelpIcon,
   PauseIcon,
   PlayIcon,
+  PresentIcon,
   ResetIcon,
   RotateIcon,
   ViewIcon,
@@ -27,6 +29,8 @@ export function Toolbar({ sim }: Props) {
   const gravity = useSimStore((s) => s.gravity);
   const setGravity = useSimStore((s) => s.setGravity);
   const canRotate = !!sim.spec.setGravity;
+  const setPresenting = useSimStore((s) => s.setPresenting);
+  const setHelpOpen = useSimStore((s) => s.setHelpOpen);
 
   return (
     <div className="toolbar" role="toolbar" aria-label={t('toolbar.label')}>
@@ -108,6 +112,27 @@ export function Toolbar({ sim }: Props) {
         onClick={() => sim.view.resetView()}
       >
         <ViewIcon />
+      </button>
+      <span className="toolbar__sep" aria-hidden />
+      <button
+        type="button"
+        className="toolbar__btn"
+        data-testid="present"
+        aria-label={t('toolbar.present')}
+        title={`${t('toolbar.present')} (P)`}
+        onClick={() => setPresenting(true)}
+      >
+        <PresentIcon />
+      </button>
+      <button
+        type="button"
+        className="toolbar__btn"
+        data-testid="help-open"
+        aria-label={t('toolbar.help')}
+        title={`${t('toolbar.help')} (?)`}
+        onClick={() => setHelpOpen(true)}
+      >
+        <HelpIcon />
       </button>
     </div>
   );

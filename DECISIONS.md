@@ -136,9 +136,37 @@ Minor, reversible decisions taken during implementation, and why.
 - **Energy panel**: K, U, E (from equilibrium) in one lane, motor power F·v and dissipated power b v² in another.
   The phase plot keeps 40 s of trail and draws the steady ellipse (semi-axes A and ωA) dashed.
 
-## Planned (from the approved plan; detailed when implemented)
+## Phase 6 — Presentation mode and polish
+
+- **One canvas for everything recorded.** `captureStream()` only sees a canvas, so presentation mode (P) moves
+  the same `SimController` onto a 1920×1080 canvas laid out in a 1280×720 logical space (scale 1.5): scene on
+  the left, the plots whose chips are on stacked in a dark column on the right (own plot instances, own
+  autoscale), and the ODE pill + regime badge drawn by `presentation/drawMath.ts` (a tiny renderer for the
+  subset our models emit, using KaTeX's fonts). The interactive stage keeps KaTeX.
+- **Options**: personality (the global serious toggle), ODE, axes (grid/tick labels of the time and phase plots
+  and of the paper; the resonance plot keeps its axes because the curve means nothing without them), solid or
+  gradient background. The options bar is DOM over the canvas, auto-hides after 2.5 s still, never recorded.
+- **Recording (G)**: `captureStream(0)` + `requestFrame()` after each drawn frame, `MediaRecorder` WebM.
+  **VP8 before VP9**: at 1080p VP9 software encoding made the page miss ~12% of frames vs ~2% for VP8.
+  G outside presentation opens it and starts recording on its first frame (deferred so a React remount does
+  not stop it). The file downloads as `oscillator-<tab>-<date>.webm`.
+- **Frame-locked time**: while recording, simulated time advances in whole 1/60 s ticks (× speed) through
+  `advanceFrame`. A late frame catches up with extra ticks (at most 4) instead of playing in slow motion, so
+  the video keeps real-time pace and the physics still runs on the fixed 1/600 s step.
+- **Performance**: drawing a full presentation frame costs ~1–2 ms (moving average in `debug().perf`), 60 fps
+  with no late frames when not recording. `strokeFading` no longer allocates 20 `Path2D` per series per frame:
+  opacity grows with the index, so one pass strokes each run of equal (opacity, manual) as one path. Plot
+  canvas sizes come from a ResizeObserver instead of a layout read per plot per frame.
+- **Measuring the 30 s acceptance**: headless Chromium (software GL and a software encoder on the same
+  machine) misses 7–27% of frames while recording 1080p and its WebM can come out shorter than 30 s, while a
+  headed window here is capped at 30 Hz even without recording. So the e2e test checks what holds anywhere
+  (1920×1080 WebM, simulated time = wall time over 30 s, frame cost) and smoothness is checked by eye on a
+  real recording.
+- **Accessibility**: `?` opens a modal with every keyboard/pointer shortcut (focus moves to Close and back;
+  other shortcuts are off while it is open); Esc closes it or leaves presentation. Focus rings come from the
+  global `:focus-visible` style (tested on the toolbar).
+
+## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by
   the same RK4 step.
-- **Recording**: `captureStream()` does not capture DOM, so presentation mode composes scene, plots and the
-  ODE (drawn by a small canvas math renderer) into one 1920×1080 canvas.

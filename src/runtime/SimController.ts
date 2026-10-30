@@ -3,7 +3,15 @@ import { SPEEDS, SimulationLoop } from '../core/sim/SimulationLoop';
 import { translate, type TKey } from '../i18n/dict';
 import { G_EARTH } from '../models/mechanical';
 import type { MechanicalInit, Observables } from '../models/types';
-import type { MechanicalSimSpec, SimExtras } from '../oscillators/types';
+import type { MechanicalSimSpec, PanelDef, SimExtras } from '../oscillators/types';
+import {
+  drawBackground,
+  drawOdeCard,
+  drawPlotColumn,
+  PRESENT,
+  presentLayout,
+} from '../presentation/compose';
+import { downloadBlob, Recorder } from '../presentation/Recorder';
 import { fitCanvas } from '../render/canvas';
 import type { Plot, PlotCtx } from '../render/plots/types';
 import type { FrameInfo, MechanicalScene } from '../render/scene/types';
@@ -20,7 +28,13 @@ interface PlotSlot {
   canvas: HTMLCanvasElement;
   plot: Plot;
   hover: { x: number; y: number } | null;
+  /** CSS size, kept by a ResizeObserver (no layout reads in the render loop). */
+  width: number;
+  height: number;
 }
+
+/** Where the controller draws: the interactive stage or the 1920×1080 presentation canvas. */
+type Surface = 'stage' | 'present';
 
 const easeInOut = (f: number): number =>
   f < 0.5 ? 4 * f * f * f : 1 - Math.pow(-2 * f + 2, 3) / 2;
@@ -61,6 +75,16 @@ export class SimController<P> {
   private lastNow = 0;
   private resize: ResizeObserver | null = null;
   private readonly plots = new Map<string, PlotSlot>();
+  private surface: Surface = 'stage';
+  /** Stage canvas to return to when presentation mode ends. */
+  private stageCanvas: HTMLCanvasElement | null = null;
+  /** Presentation plots: own instances (own autoscale), created on first use. */
+  private readonly presentPlots = new Map<string, Plot>();
+  private recorder: Recorder | null = null;
+  /** Start recording as soon as presentation mode attaches its canvas (the G shortcut). */
+  recordOnPresent = false;
+  /** Render cost (ms): moving average and worst since `resetPerf()`; frames over 25 ms apart. */
+  private perf = { renderMs: 0, renderMax: 0, frames: 0, longFrames: 0 };
   private firstFit = true;
   /** Height reserved for the floating toolbar at the bottom of the stage. */
   static readonly TOOLBAR_INSET = 78;
@@ -71,7 +95,11 @@ export class SimController<P> {
   /** g last applied to the params (NaN before the first application). */
   private gravity = NaN;
 
-  constructor(readonly spec: MechanicalSimSpec<P>) {
+  constructor(
+    readonly spec: MechanicalSimSpec<P>,
+    /** Plugin id, used to name recordings. */
+    readonly id = 'sim',
+  ) {
     this.ic = { ...spec.defaultInit };
     this.scene = spec.createScene();
     this.extras = spec.createExtras?.({ setParam: (k, v) => this.setParam(k, v) });
@@ -119,7 +147,9 @@ export class SimController<P> {
     return this.loop.running;
   }
 
-  attach(canvas: HTMLCanvasElement): void {
+  attach(canvas: HTMLCanvasElement, surface: Surface = 'stage'): void {
+    this.surface = surface;
+    this.firstFit = true;
     this.canvas = canvas;
     this.g = canvas.getContext('2d');
     this.resize = new ResizeObserver(() => this.layout());
@@ -136,9 +166,78 @@ export class SimController<P> {
     this.g = null;
   }
 
+  get presenting(): boolean {
+    return this.surface === 'present';
+  }
+
+  /** Moves rendering to the presentation canvas (the stage canvas stays mounted underneath). */
+  enterPresentation(canvas: HTMLCanvasElement): void {
+    if (this.presenting) return;
+    this.stageCanvas = this.canvas;
+    this.detach();
+    this.attach(canvas, 'present');
+  }
+
+  exitPresentation(): void {
+    if (!this.presenting) return;
+    void this.stopRecording();
+    this.detach();
+    this.surface = 'stage';
+    if (this.stageCanvas) this.attach(this.stageCanvas);
+  }
+
+  get recording(): boolean {
+    return this.recorder !== null;
+  }
+
+  /**
+   * Records the presentation canvas to WebM. While recording, every frame advances exactly
+   * 1/60 s of simulated time (× speed), so the video is smooth even if a frame is late.
+   */
+  startRecording(): boolean {
+    if (!this.presenting || this.recorder || !this.canvas) return false;
+    try {
+      this.recorder = new Recorder(this.canvas);
+    } catch {
+      return false;
+    }
+    this.resetPerf();
+    useSimStore.setState({ recording: true });
+    return true;
+  }
+
+  /** Stops the recording and downloads it; resolves with the video (null if none). */
+  async stopRecording(): Promise<Blob | null> {
+    const rec = this.recorder;
+    if (!rec) return null;
+    this.recorder = null;
+    useSimStore.setState({ recording: false });
+    const blob = await rec.stop();
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    downloadBlob(blob, `oscillator-${this.id}-${stamp}.webm`);
+    return blob;
+  }
+
+  resetPerf(): void {
+    this.perf = { renderMs: 0, renderMax: 0, frames: 0, longFrames: 0 };
+  }
+
+  /** Pointer position in the canvas's logical coordinates (the presentation canvas is scaled). */
+  toLocal(clientX: number, clientY: number): Vec2 {
+    const r = this.canvas?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    const k = this.presenting ? PRESENT.width / r.width : 1;
+    return { x: (clientX - r.left) * k, y: (clientY - r.top) * k };
+  }
   /** Registers a side-panel plot canvas; returns the unregister function. */
   registerPlot(id: string, canvas: HTMLCanvasElement, plot: Plot): () => void {
-    const slot: PlotSlot = { canvas, plot, hover: null };
+    const slot: PlotSlot = { canvas, plot, hover: null, width: 0, height: 0 };
+    const ro = new ResizeObserver(() => {
+      const r = canvas.getBoundingClientRect();
+      slot.width = r.width;
+      slot.height = r.height;
+    });
+    ro.observe(canvas);
     const move = (e: PointerEvent) => {
       const r = canvas.getBoundingClientRect();
       slot.hover = { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -148,6 +247,7 @@ export class SimController<P> {
     canvas.addEventListener('pointerleave', leave);
     this.plots.set(id, slot);
     return () => {
+      ro.disconnect();
       canvas.removeEventListener('pointermove', move);
       canvas.removeEventListener('pointerleave', leave);
       if (this.plots.get(id) === slot) this.plots.delete(id);
@@ -178,6 +278,7 @@ export class SimController<P> {
     this.history.clear();
     this.extras?.onReset?.();
     for (const s of this.plots.values()) s.plot.reset?.();
+    for (const p of this.presentPlots.values()) p.reset?.();
     this.recordNow();
     this.syncStore();
   }
@@ -241,6 +342,7 @@ export class SimController<P> {
       px: 1 / this.view.pxPerMeter,
       ppx: 1 / this.view.fitScale,
       serious: ui.serious,
+      axes: !this.presenting || ui.present.axes,
       hoverId: this.highlightId,
       realDt,
       history: this.history,
@@ -340,6 +442,19 @@ export class SimController<P> {
   private layout(): void {
     const c = this.canvas;
     if (!c) return;
+    if (this.presenting) {
+      // Fixed video size; CSS letterboxes it into the window.
+      const w = PRESENT.width * PRESENT.scale;
+      const h = PRESENT.height * PRESENT.scale;
+      if (c.width !== w || c.height !== h) {
+        c.width = w;
+        c.height = h;
+      }
+      this.dpr = PRESENT.scale;
+      this.layoutPresent();
+      this.view.fitSmooth(this.scene.bounds(this.frameInfo(0)), 0, true);
+      return;
+    }
     const rect = c.getBoundingClientRect();
     this.dpr = fitCanvas(c, rect.width, rect.height);
     this.view.width = rect.width;
@@ -352,18 +467,61 @@ export class SimController<P> {
 
   private frame = (now: number): void => {
     this.raf = requestAnimationFrame(this.frame);
-    const realDt = Math.min((now - this.lastNow) / 1000, 0.1);
+    // Deferred to the first frame: React may mount, unmount and remount the stage first.
+    if (this.recordOnPresent && this.presenting) {
+      this.recordOnPresent = false;
+      this.startRecording();
+    }
+    const wall = (now - this.lastNow) / 1000;
     this.lastNow = now;
+    // Frame-locked while recording: time moves in whole 1/60 s ticks. A late frame (the encoder
+    // can stall the page) catches up with extra ticks, so the video never plays in slow motion.
+    const ticks = this.recorder ? Math.min(4, Math.max(1, Math.round(wall * 60))) : 0;
+    const realDt = ticks ? ticks / 60 : Math.min(wall, 0.1);
     this.updatePerspective(realDt);
     if (this.holdTarget && this.loop.isHeld) this.loop.hold(this.holdTarget.x, this.holdTarget.v);
-    this.loop.advance(realDt);
+    if (ticks) for (let i = 0; i < ticks; i++) this.loop.advanceFrame(1 / 60);
+    else this.loop.advance(realDt);
+    const t0 = performance.now();
     this.render(realDt);
+    const ms = performance.now() - t0;
+    const p = this.perf;
+    p.renderMs = p.frames === 0 ? ms : p.renderMs * 0.95 + ms * 0.05;
+    p.renderMax = Math.max(p.renderMax, ms);
+    if (p.frames > 0 && wall > 0.025) p.longFrames++;
+    p.frames++;
+    this.recorder?.frame();
   };
+
+  /** Presentation layout for the current chips and options (cheap; done every frame). */
+  private layoutPresent() {
+    const ui = useSimStore.getState();
+    const panels = this.spec.panels.filter((p) => p.chips.some((c) => ui.chips[c]));
+    const L = presentLayout(panels, ui.present);
+    this.view.width = L.sceneW;
+    this.view.height = PRESENT.height;
+    this.view.insetTop = L.insetTop;
+    this.view.insetBottom = L.insetBottom;
+    return L;
+  }
+
+  private presentPlot(panel: PanelDef): Plot {
+    let plot = this.presentPlots.get(panel.id);
+    if (!plot) {
+      plot = panel.create(this.extras);
+      this.presentPlots.set(panel.id, plot);
+    }
+    return plot;
+  }
 
   render(realDt = 0): void {
     const g = this.g;
     const c = this.canvas;
     if (!g || !c) return;
+    if (this.presenting) {
+      this.renderPresent(g, realDt);
+      return;
+    }
     const f = this.frameInfo(realDt);
     this.view.fitSmooth(this.scene.bounds(f), realDt, this.firstFit);
     this.firstFit = false;
@@ -381,10 +539,65 @@ export class SimController<P> {
     this.placePopover(f);
   }
 
+  /** Everything in one canvas (what gets recorded): background, scene, ODE, plots. */
+  private renderPresent(g: CanvasRenderingContext2D, realDt: number): void {
+    const L = this.layoutPresent();
+    const ui = useSimStore.getState();
+    const f = this.frameInfo(realDt);
+    this.view.fitSmooth(this.scene.bounds(f), realDt, this.firstFit);
+    this.firstFit = false;
+    this.scene.update(f);
+    const k = PRESENT.scale;
+
+    g.setTransform(k, 0, 0, k, 0, 0);
+    drawBackground(g, ui.present.background);
+    g.save();
+    g.beginPath();
+    g.rect(0, 0, L.sceneW, PRESENT.height);
+    g.clip();
+    this.view.apply(g, k);
+    this.scene.draw(g, f);
+    g.setTransform(k, 0, 0, k, 0, 0);
+    this.scene.drawOverlay?.(g, f);
+    g.restore();
+
+    if (ui.present.ode) {
+      const params = this.params as Record<string, number>;
+      const badge = this.spec.badge?.(params) ?? null;
+      drawOdeCard(
+        g,
+        {
+          eq: this.spec.model.latexODE(this.params),
+          badge: badge && { text: f.tr(badge.key), tone: badge.tone },
+          lit: this.spec.objects.find((o) => o.id === this.highlightId)?.terms ?? [],
+        },
+        L.sceneW / 2,
+      );
+    }
+
+    drawPlotColumn(
+      g,
+      L,
+      (panel) => this.presentPlot(panel),
+      {
+        history: this.history,
+        t: this.loop.t,
+        window: f.window,
+        chips: f.chips,
+        dt: realDt,
+        params: this.params as Record<string, number>,
+        axes: ui.present.axes,
+        tr: f.tr,
+      },
+      f.tr,
+    );
+    this.syncHover();
+  }
+
   private renderPlots(f: FrameInfo<Float64Array, P>, realDt: number): void {
     for (const slot of this.plots.values()) {
       const pc = slot.canvas;
-      const rect = pc.getBoundingClientRect();
+      const rect = slot;
       if (rect.width < 2 || rect.height < 2) continue;
       const dpr = fitCanvas(pc, rect.width, rect.height);
       const pg = pc.getContext('2d');
@@ -399,6 +612,7 @@ export class SimController<P> {
         hover: slot.hover,
         dt: realDt,
         params: this.params as Record<string, number>,
+        axes: true,
         tr: f.tr,
       };
       slot.plot.draw(pg, rect.width, rect.height, ctx);
@@ -471,8 +685,7 @@ export class SimController<P> {
     const k = this.spec.model;
     const s = this.state;
     const bodyW = this.scene.bodyW(this.params);
-    const p = this.view.toScreen(k.getPos(s), bodyW);
-    const rect = this.canvas?.getBoundingClientRect();
+    const block = this.pageCoords(k.getPos(s), bodyW);
     return {
       x: k.getPos(s),
       v: k.getVel(s),
@@ -489,7 +702,12 @@ export class SimController<P> {
       highlightId: this.highlightId,
       params: { ...this.params },
       bodyW,
-      block: { x: (rect?.left ?? 0) + p.x, y: (rect?.top ?? 0) + p.y },
+      block,
+      presenting: this.presenting,
+      recording: this.recording,
+      frames: this.recorder?.frames ?? 0,
+      canvas: this.canvas ? { width: this.canvas.width, height: this.canvas.height } : null,
+      perf: { ...this.perf },
     };
   }
 
@@ -497,6 +715,7 @@ export class SimController<P> {
   pageCoords(u: number, w: number) {
     const p = this.view.toScreen(u, w);
     const rect = this.canvas?.getBoundingClientRect();
-    return { x: (rect?.left ?? 0) + p.x, y: (rect?.top ?? 0) + p.y };
+    const k = this.presenting && rect ? rect.width / PRESENT.width : 1;
+    return { x: (rect?.left ?? 0) + p.x * k, y: (rect?.top ?? 0) + p.y * k };
   }
 }

@@ -15,7 +15,8 @@ const BUCKETS = 10;
 
 /**
  * Strokes a polyline whose opacity fades with age, plus dashed segments where the sample is
- * flagged manual. Segments are grouped into opacity buckets so each bucket is a single path.
+ * flagged manual. Opacity grows monotonically with the index, so samples are walked once and
+ * each run of equal (opacity bucket, manual) is one path: no allocation, few state changes.
  */
 export function strokeFading(
   g: CanvasRenderingContext2D,
@@ -30,28 +31,45 @@ export function strokeFading(
   width: number,
 ): void {
   if (to - from < 1) return;
-  const paths: Path2D[] = Array.from({ length: BUCKETS }, () => new Path2D());
-  const manualPaths: Path2D[] = Array.from({ length: BUCKETS }, () => new Path2D());
-  for (let i = from + 1; i <= to; i++) {
-    const a = opacity(i);
-    if (a <= 0.01) continue;
-    const b = Math.min(BUCKETS - 1, Math.floor(a * BUCKETS));
-    const p = manual(i) ? manualPaths[b]! : paths[b]!;
-    p.moveTo(px(i - 1), py(i - 1));
-    p.lineTo(px(i), py(i));
-  }
   g.lineCap = 'round';
   g.lineJoin = 'round';
   g.lineWidth = width;
-  for (let b = 0; b < BUCKETS; b++) {
-    g.globalAlpha = (b + 1) / BUCKETS;
-    g.setLineDash([]);
-    g.strokeStyle = color;
-    g.stroke(paths[b]!);
-    g.setLineDash([width * 2.2, width * 2]);
-    g.strokeStyle = manualColor;
-    g.stroke(manualPaths[b]!);
+  let bucket = -1;
+  let isManual = false;
+  let open = false;
+  const flush = () => {
+    if (!open) return;
+    g.globalAlpha = (bucket + 1) / BUCKETS;
+    g.strokeStyle = isManual ? manualColor : color;
+    g.setLineDash(isManual ? [width * 2.2, width * 2] : []);
+    g.stroke();
+    open = false;
+  };
+  let x0 = px(from);
+  let y0 = py(from);
+  for (let i = from + 1; i <= to; i++) {
+    const x1 = px(i);
+    const y1 = py(i);
+    const a = opacity(i);
+    if (a > 0.01) {
+      const b = Math.min(BUCKETS - 1, Math.floor(a * BUCKETS));
+      const m = manual(i);
+      if (!open || b !== bucket || m !== isManual) {
+        flush();
+        bucket = b;
+        isManual = m;
+        g.beginPath();
+        g.moveTo(x0, y0);
+        open = true;
+      }
+      g.lineTo(x1, y1);
+    } else {
+      flush();
+    }
+    x0 = x1;
+    y0 = y1;
   }
+  flush();
   g.setLineDash([]);
   g.globalAlpha = 1;
 }

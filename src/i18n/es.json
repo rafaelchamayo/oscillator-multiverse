@@ -22,10 +22,16 @@
     "perspective": "Vista vertical",
     "perspectiveOff": "Vista horizontal",
     "gravity": "Gravedad",
-    "window": "Ventana de la traza: {s} s"
+    "window": "Ventana de la traza: {s} s",
+    "present": "Modo presentación",
+    "help": "Atajos de teclado"
   },
   "keys": {
-    "space": "Espacio"
+    "space": "Espacio",
+    "esc": "Esc",
+    "wheel": "Rueda",
+    "dblclick": "Doble clic",
+    "drag": "Arrastrar"
   },
   "scene": {
     "wii": "¡wii!",
@@ -80,5 +86,36 @@
   },
   "presets": {
     "label": "Configuraciones"
+  },
+  "present": {
+    "label": "Modo presentación",
+    "personality": "Personalidad",
+    "ode": "EDO",
+    "axes": "Ejes",
+    "background": "Fondo",
+    "solid": "liso",
+    "gradient": "degradado",
+    "record": "Grabar",
+    "stop": "Detener",
+    "exit": "Salir",
+    "recording": "Grabando",
+    "hint": "G graba · Esc sale · ? atajos",
+    "unsupported": "Este navegador no puede grabar video (MediaRecorder)."
+  },
+  "help": {
+    "title": "Atajos de teclado",
+    "close": "Cerrar",
+    "play": "Reproducir / pausar",
+    "reset": "Reiniciar a las condiciones iniciales",
+    "perspective": "Vista vertical / horizontal",
+    "present": "Modo presentación (1920×1080)",
+    "record": "Grabar video WebM (en presentación)",
+    "help": "Esta ayuda",
+    "exit": "Cerrar ayuda / salir de presentación",
+    "zoom": "Zoom hacia el cursor",
+    "resetView": "Restablecer la vista",
+    "drag": "Mover el bloque (x₀); soltar con impulso lo lanza (v₀)",
+    "arrow": "Arrastrar la punta de la flecha cambia v₀ (en pausa)",
+    "pan": "Arrastrar el fondo desplaza la vista"
   }
 }

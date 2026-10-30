@@ -72,7 +72,7 @@ export class PhasePlot implements Plot {
     const X = (x: number) => pad.l + this.xs.frac(x) * w;
     const Y = (v: number) => pad.t + hh - this.vs.frac(v) * hh;
 
-    this.drawAxes(g, pad, w, hh);
+    if (ctx.axes) this.drawAxes(g, pad, w, hh);
 
     // Limit cycle (steady state), dashed, under the trail.
     if (lim && Number.isFinite(lim.a) && Number.isFinite(lim.b)) {

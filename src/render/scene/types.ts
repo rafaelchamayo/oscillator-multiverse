@@ -20,6 +20,8 @@ export interface FrameInfo<S, P> {
   /** Meters per CSS pixel at zoom 1: sizes of physical objects, which magnify with zoom. */
   ppx: number;
   serious: boolean;
+  /** Paper grid labels (presentation mode can hide them). */
+  axes: boolean;
   hoverId: string | null;
   /** Real seconds since the last frame (animations), 0 when frozen. */
   realDt: number;

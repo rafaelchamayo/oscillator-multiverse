@@ -468,7 +468,7 @@ export function createSpringBlockScene<P extends SpringBlockParams>(
         }
       }
 
-      drawPaperLabels(g, f, o);
+      if (f.axes) drawPaperLabels(g, f, o);
       if (f.chips.energy) drawEnergyBar(g, f, x, cw);
       for (const p of parts) p.drawOverlay?.(g, f, geo);
       if (paperHover) {

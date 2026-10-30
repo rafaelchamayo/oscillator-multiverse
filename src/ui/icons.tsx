@@ -70,3 +70,32 @@ export const GravityIcon = () => (
     <path d="M5 20h14" />
   </svg>
 );
+
+/** Screen on a stand (presentation mode). */
+export const PresentIcon = () => (
+  <svg {...base}>
+    <rect x="3" y="4" width="18" height="12" rx="2" />
+    <path d="M12 16v4M8 20h8" />
+    <path d="M10.5 8v4l3.5-2z" fill="currentColor" />
+  </svg>
+);
+
+export const HelpIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8" />
+    <circle cx="12" cy="17" r="0.6" fill="currentColor" />
+  </svg>
+);
+
+export const RecordIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="6.5" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+export const StopIcon = () => (
+  <svg {...base}>
+    <rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor" stroke="none" />
+  </svg>
+);

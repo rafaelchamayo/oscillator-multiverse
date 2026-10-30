@@ -22,10 +22,16 @@
     "perspective": "Vertical view",
     "perspectiveOff": "Horizontal view",
     "gravity": "Gravity",
-    "window": "Trace window: {s} s"
+    "window": "Trace window: {s} s",
+    "present": "Presentation mode",
+    "help": "Keyboard shortcuts"
   },
   "keys": {
-    "space": "Space"
+    "space": "Space",
+    "esc": "Esc",
+    "wheel": "Wheel",
+    "dblclick": "Double-click",
+    "drag": "Drag"
   },
   "scene": {
     "wii": "wheee!",
@@ -80,5 +86,36 @@
   },
   "presets": {
     "label": "Presets"
+  },
+  "present": {
+    "label": "Presentation mode",
+    "personality": "Personality",
+    "ode": "ODE",
+    "axes": "Axes",
+    "background": "Background",
+    "solid": "solid",
+    "gradient": "gradient",
+    "record": "Record",
+    "stop": "Stop",
+    "exit": "Exit",
+    "recording": "Recording",
+    "hint": "G records · Esc exits · ? shortcuts",
+    "unsupported": "This browser cannot record video (MediaRecorder)."
+  },
+  "help": {
+    "title": "Keyboard shortcuts",
+    "close": "Close",
+    "play": "Play / pause",
+    "reset": "Reset to the initial conditions",
+    "perspective": "Vertical / horizontal view",
+    "present": "Presentation mode (1920×1080)",
+    "record": "Record a WebM video (in presentation)",
+    "help": "This help",
+    "exit": "Close help / leave presentation",
+    "zoom": "Zoom towards the cursor",
+    "resetView": "Reset the view",
+    "drag": "Move the block (x₀); release with a flick to fling it (v₀)",
+    "arrow": "Drag the arrow tip to change v₀ (while paused)",
+    "pan": "Drag the background to pan"
   }
 }

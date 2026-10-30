@@ -3,6 +3,13 @@ import { create } from 'zustand';
 export type Perspective = 'horizontal' | 'vertical';
 export const TRACE_WINDOWS = [4, 8, 16] as const;
 
+/** What presentation mode draws (personality is the global `serious` toggle). */
+export interface PresentOptions {
+  ode: boolean;
+  axes: boolean;
+  background: 'solid' | 'gradient';
+}
+
 /**
  * Mirror of the active simulation's coarse state for React (toolbar, chips), plus view
  * options the controller reads every frame. Per-frame data never goes through React.
@@ -24,11 +31,21 @@ interface SimUiState {
   highlightId: string | null;
   /** Snapshot of the model parameters, refreshed when they change (ODE, sliders). */
   params: Record<string, number>;
+  /** Presentation mode (1920×1080 stage, no UI) and its options. */
+  presenting: boolean;
+  present: PresentOptions;
+  /** A WebM recording of the presentation canvas is in progress. */
+  recording: boolean;
+  /** Keyboard shortcuts dialog. */
+  helpOpen: boolean;
   setSerious: (v: boolean) => void;
   togglePerspective: () => void;
   setGravity: (v: boolean) => void;
   setChip: (id: string, on: boolean) => void;
   cycleTraceWindow: () => void;
+  setPresenting: (v: boolean) => void;
+  setPresent: (o: Partial<PresentOptions>) => void;
+  setHelpOpen: (v: boolean) => void;
 }
 
 export const useSimStore = create<SimUiState>((set) => ({
@@ -42,6 +59,10 @@ export const useSimStore = create<SimUiState>((set) => ({
   hoverId: null,
   highlightId: null,
   params: {},
+  presenting: false,
+  present: { ode: true, axes: true, background: 'gradient' },
+  recording: false,
+  helpOpen: false,
   setSerious: (serious) => set({ serious }),
   togglePerspective: () =>
     set((s) => ({
@@ -56,4 +77,7 @@ export const useSimStore = create<SimUiState>((set) => ({
       const i = TRACE_WINDOWS.indexOf(s.traceWindow as (typeof TRACE_WINDOWS)[number]);
       return { traceWindow: TRACE_WINDOWS[(i + 1) % TRACE_WINDOWS.length]! };
     }),
+  setPresenting: (presenting) => set({ presenting }),
+  setPresent: (o) => set((s) => ({ present: { ...s.present, ...o } })),
+  setHelpOpen: (helpOpen) => set({ helpOpen }),
 }));

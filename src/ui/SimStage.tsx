@@ -3,10 +3,13 @@ import { PointerController } from '../interaction/PointerController';
 import type { OscillatorPlugin } from '../oscillators/types';
 import { useT } from '../i18n/useT';
 import { SimController } from '../runtime/SimController';
+import { useSimStore } from '../state/simStore';
 import { ObjectPopover } from './ObjectPopover';
 import { OdeView } from './OdeView';
 import { PlotPanel } from './PlotPanel';
+import { PresentationStage } from './PresentationStage';
 import { Presets } from './Presets';
+import { ShortcutsHelp } from './ShortcutsHelp';
 import { Toolbar } from './Toolbar';
 import { useShortcuts } from './useShortcuts';
 
@@ -25,12 +28,15 @@ interface Props {
 export function SimStage({ plugin }: Props) {
   const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [sim] = useState(() => new SimController(plugin.sim));
+  const [sim] = useState(() => new SimController(plugin.sim, plugin.id));
+  const presenting = useSimStore((s) => s.presenting);
   useShortcuts(sim);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // Presentation never survives a tab switch: the stage canvas must attach first.
+    useSimStore.getState().setPresenting(false);
     sim.attach(canvas);
     const pointer = new PointerController(sim, canvas);
     if (import.meta.env.DEV) window.__osc = sim;
@@ -54,6 +60,8 @@ export function SimStage({ plugin }: Props) {
         <Toolbar sim={sim} />
       </section>
       <PlotPanel sim={sim} />
+      {presenting && <PresentationStage sim={sim} />}
+      <ShortcutsHelp />
     </>
   );
 }
