@@ -1,0 +1,5 @@
+dist
+node_modules
+.venv
+package-lock.json
+prompt_claude_code_oscillator_multiverse.md

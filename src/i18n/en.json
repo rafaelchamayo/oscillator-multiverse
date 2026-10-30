@@ -1,0 +1,14 @@
+{
+  "app": {
+    "title": "Oscillator Multiverse",
+    "tagline": "Build physical intuition by playing with oscillators"
+  },
+  "header": {
+    "language": "Language",
+    "tabs": "Oscillators"
+  },
+  "placeholder": {
+    "comingSoon": "Scene under construction",
+    "body": "The interactive simulation will live here. Soon you'll grab the block, fling it and watch it draw its own equation."
+  }
+}

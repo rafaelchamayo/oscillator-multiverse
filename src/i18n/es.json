@@ -1,0 +1,14 @@
+{
+  "app": {
+    "title": "Oscillator Multiverse",
+    "tagline": "Desarrolla intuición física jugando con osciladores"
+  },
+  "header": {
+    "language": "Idioma",
+    "tabs": "Osciladores"
+  },
+  "placeholder": {
+    "comingSoon": "Escena en construcción",
+    "body": "Aquí vivirá la simulación interactiva. Pronto podrás agarrar el bloque, lanzarlo y ver cómo dibuja su propia ecuación."
+  }
+}
