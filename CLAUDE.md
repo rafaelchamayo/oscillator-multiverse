@@ -31,6 +31,9 @@ Spec: `prompt_claude_code_oscillator_multiverse.md`. Decisions log: `DECISIONS.m
 - Hash routing (`#/<plugin-id>`) for GitHub Pages.
 - Colors/fonts only from `theme.ts` (CSS reads them as `--c-*`, `--f-*`, `--r-*`).
 - Tests reach into canvas state via `window.__osc` (dev/test only).
+- Models step state **in place** with preallocated buffers: no allocation in the hot loop.
+- Physics tests run at the slider extremes (`SHO_RANGES`, `DD_RANGES`); widen a range → the tests cover it.
+- Shared test helpers (`simulate`, `fitSinusoid`) live in `src/test/sim.ts`.
 - Git: local commits per phase, no AI attribution in messages; the owner pushes.
 
 ## Adding an oscillator
@@ -44,7 +47,7 @@ Spec: `prompt_claude_code_oscillator_multiverse.md`. Decisions log: `DECISIONS.m
 ## Phase status
 
 - [x] Phase 0 — Scaffolding (Vite/React/TS, lint, Vitest, Playwright, theme, tabs, i18n ES/EN)
-- [ ] Phase 1 — Physics core
+- [x] Phase 1 — Physics core (Model/odeModel, RK4, SimulationLoop, SHO + damped-driven, §8 tests)
 - [ ] Phase 2 — SHO scene
 - [ ] Phase 3 — Trace and plots
 - [ ] Phase 4 — Hover, popovers, ODE

@@ -15,6 +15,23 @@ Minor, reversible decisions taken during implementation, and why.
   to Spanish, then to the key itself. Default language: saved choice, else browser language, else Spanish.
 - **Vite `base`** is `./` by default, overridable with `BASE_PATH` (used by the Pages workflow).
 
+## Phase 1
+
+- **Time as an integer step count** (t = n·dt, dt = 1/600 s) so simulated time never drifts; the accumulator
+  is measured in steps. Frames longer than 0.1 s (background tab) are clamped.
+- **`advanceFrame()`** advances exactly 1/60 s × speed per frame, used for deterministic recording.
+- **Holding the block** (`hold`/`release`): integration is suspended and each step interpolates linearly to
+  the latest pointer position, so time and traces keep a smooth, uniformly sampled flow; samples are flagged
+  `manual`. W_in/W_diss are not accumulated while held (the hand's work is not part of the model).
+- **Slider ranges** (kg, N/m, N·s/m, N, rad/s): m ∈ [0.2, 5], k ∈ [1, 50], b ∈ [0, 20], F₀ ∈ [0, 20],
+  ω ∈ [0.1, 15]. The stiffest case (ω₀ ≈ 15.8 rad/s) still gives RK4 error ≈ 2.5e-7 < 1e-6 over 10 periods.
+- **Energy drift test** measures E − E_min (the oscillation energy) so it stays meaningful with gravity,
+  where E itself can be near zero.
+- **Regime badge** treats |γ − ω₀| ≤ 0.1% ω₀ as critical; the analytic solution uses the exact regime.
+- **ODE coefficients** are shown with two decimals, trailing zeros trimmed but at least one kept
+  (2 → `2.0`, 0.25 → `0.25`). Gravity appears as `− m·g` with both values (e.g. `−2.0·9.81`).
+- **Phase φ** is the lag of the response behind the drive, x_ss = x_eq + A cos(ωt − φ), φ ∈ [0, π].
+
 ## Planned (from the approved plan; detailed when implemented)
 
 - **Driving force**: option (a), a direct force F₀ cos ωt on the block; the crank is visual only. The ODE then
