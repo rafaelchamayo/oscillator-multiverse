@@ -1,3 +1,4 @@
+import type { Hit } from '../render/scene/types';
 import type { SimController } from '../runtime/SimController';
 import { FlingEstimator } from './flingEstimator';
 
@@ -8,6 +9,7 @@ type Mode =
   | { kind: 'none' }
   | { kind: 'body'; offset: number }
   | { kind: 'handle' }
+  | { kind: 'custom'; drag: NonNullable<Hit['drag']> }
   | { kind: 'pan'; lastX: number; lastY: number };
 
 /**
@@ -68,7 +70,10 @@ export class PointerController<P> {
       this.sim.activeBody = hit.body ?? 0;
     }
     const i = this.sim.activeBody;
-    if (hit?.role === 'velocityHandle' && !this.sim.running) {
+    if (hit?.role === 'handle' && hit.drag) {
+      this.mode = { kind: 'custom', drag: hit.drag };
+      hit.drag(pt, this.sim);
+    } else if (hit?.role === 'velocityHandle' && !this.sim.running) {
       this.mode = { kind: 'handle' };
     } else if (hit?.role === 'body') {
       const x = k.getPos(this.sim.state, i);
@@ -99,6 +104,10 @@ export class PointerController<P> {
       const l = this.local(e);
       sim.view.panBy(l.x - m.lastX, l.y - m.lastY);
       this.mode = { kind: 'pan', lastX: l.x, lastY: l.y };
+      return;
+    }
+    if (m.kind === 'custom') {
+      m.drag(pt, sim);
       return;
     }
     const k = sim.spec.model;
@@ -168,11 +177,12 @@ export class PointerController<P> {
   }
 
   private updateCursor(role: string | null): void {
-    const grabbing = this.mode.kind === 'body' || this.mode.kind === 'pan';
+    const grabbing =
+      this.mode.kind === 'body' || this.mode.kind === 'pan' || this.mode.kind === 'custom';
     this.canvas.style.cursor =
       role === 'velocityHandle' && !this.sim.running
         ? 'ew-resize'
-        : role === 'body'
+        : role === 'body' || role === 'handle'
           ? grabbing
             ? 'grabbing'
             : 'grab'

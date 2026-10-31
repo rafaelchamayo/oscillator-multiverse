@@ -340,3 +340,12 @@ test('screenshot presentation coupled N = 5 (matrix ODE on canvas)', async ({ pa
   await page.waitForTimeout(800);
   await saveCanvas(page, 'e2e/screenshots/present-coupled-canvas.png');
 });
+
+test('screenshot quantum placeholder (coherent packet)', async ({ page }) => {
+  await open(page, '/#/quantum-ho', 'es');
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: 'e2e/screenshots/quantum-placeholder.png' });
+  await sim(page, 's.play(); for (let i = 0; i < 200; i++) s.loop.advanceFrame();');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: 'e2e/screenshots/quantum-placeholder-running.png' });
+});

@@ -90,6 +90,6 @@ Coupled oscillators tab (N = 2…5 masses between two walls; plan in DECISIONS.m
 Quantum harmonic oscillator 1D tab (superpositions of eigenstates, natural units ħ = m = ω = 1; plan in DECISIONS.md):
 
 - [x] Q1 — Physics (Hermite basis, exact evolution, coherent/cat states, ladder observables, Wigner function, tests)
-- [ ] Q2 — Runtime + placeholder (custom drag handles, `editState`, `PlotCtx.state`, minimal tab)
+- [x] Q2 — Runtime + placeholder (custom drag handles, `editState`, `PlotCtx.state`, minimal tab)
 - [ ] Q3 — Scene and interaction (levels, domain coloring, phasor wheels, packet fling, classical overlay, carpet, presets)
 - [ ] Q4 — Plots and presentation (spectrum, ⟨x⟩/⟨p⟩, uncertainty, phase plot, Wigner, canvas Schrödinger)

@@ -282,6 +282,28 @@ Minor, reversible decisions taken during implementation, and why.
   - ∫W = 1, the ground state has the analytic W, W₁(0,0) = −1/π, a cat state has W < 0, and W rotates
     rigidly.
 
+## Quantum harmonic oscillator — Q2: runtime and placeholder tab
+
+- **Custom handles**: a hit with role `handle` and a `drag(pt, sim)` callback gets the pointer on press
+  and on every move. It edits the state through `StateEditor.editState(fn)`, which the controller
+  implements: while paused the edited state also becomes the initial condition. The phasor wheels (Q3)
+  use this; the mechanical tabs are untouched.
+- **`PlotCtx.state`**: plots can read the current state (the spectrum and Wigner panels need cₙ now,
+  not a history).
+- **No bounce for the quantum scene**: it implements `constrain` as a no-op. The default bounce would
+  call `setKinematic` and replace a superposition with a coherent state whenever ⟨x⟩ went past a limit.
+  The hand's reach is limited by `clampX` (±R_MAX) and `writeCoherent` instead.
+- **Packet grab point**: `bodyW` is the middle of the wave as last drawn, at height ⟨E⟩ + half its peak.
+- **ODE view**: it renders as soon as the store holds every default param, so a model with no params
+  (this one) renders too.
+- The placeholder scene has:
+  - the parabola V = ½x² (hover: `potential`);
+  - |ψ|² filled at the height of ⟨E⟩, with the turning points ±√(2⟨E⟩);
+  - the ⟨x⟩ marker;
+  - the ⟨p⟩ arrow with its handle while paused;
+  - an ⟨x⟩/⟨p⟩ panel.
+  - The time is shown as ωt.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by

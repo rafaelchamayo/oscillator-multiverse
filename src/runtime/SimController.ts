@@ -350,6 +350,12 @@ export class SimController<P> {
     this.initState = init;
   }
 
+  /** Custom handles edit the state here (see `StateEditor`). */
+  editState(fn: (state: Float64Array) => void): void {
+    fn(this.state);
+    if (!this.running) this.initState = this.spec.model.cloneState(this.state);
+  }
+
   beginHold(x: number, i = this.activeBody): void {
     this.held = true;
     this.activeBody = i;
@@ -674,6 +680,7 @@ export class SimController<P> {
         chips: f.chips,
         dt: realDt,
         params: this.params as Record<string, number>,
+        state: this.state,
         axes: ui.present.axes,
         tr: f.tr,
       },
@@ -700,6 +707,7 @@ export class SimController<P> {
         hover: slot.hover,
         dt: realDt,
         params: this.params as Record<string, number>,
+        state: this.state,
         axes: true,
         tr: f.tr,
       };

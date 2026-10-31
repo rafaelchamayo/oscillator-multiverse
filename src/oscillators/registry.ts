@@ -3,6 +3,7 @@ import type { OscillatorPlugin } from './types';
 import { shoPlugin } from './sho';
 import { dampedDrivenPlugin } from './damped-driven';
 import { coupledPlugin } from './coupled';
+import { quantumHoPlugin } from './quantum-ho';
 
 const plugins: OscillatorPlugin[] = [];
 
@@ -24,3 +25,4 @@ export function getPlugin(id: string): OscillatorPlugin | undefined {
 registerPlugin(shoPlugin);
 registerPlugin(dampedDrivenPlugin);
 registerPlugin(coupledPlugin);
+registerPlugin(quantumHoPlugin);

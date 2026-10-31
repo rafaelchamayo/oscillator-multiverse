@@ -1,0 +1,22 @@
+{
+  "title": "Quantum oscillator",
+  "short": "Quantum",
+  "tagline": "A probability wave in a parabolic well: combine states and watch quantum mechanics ring.",
+  "objects": {
+    "potential": {
+      "title": "Potential V(x) = ½x²",
+      "desc": "The same spring as the classical oscillator, now as an energy well. A classical particle with energy E would bounce between the points where the parabola meets the E line."
+    },
+    "packet": {
+      "title": "Wave function",
+      "desc": "Its height is |ψ(x)|²: the probability of finding the particle at x. Drag it to make a coherent state somewhere else; fling it to give it momentum."
+    },
+    "velocity": {
+      "title": "Momentum ⟨p⟩",
+      "desc": "The packet's mean momentum. While paused, drag its tip to choose ⟨p⟩(0)."
+    }
+  },
+  "params": {},
+  "chips": { "expect": "⟨x⟩, ⟨p⟩" },
+  "panels": { "expect": "Expectation values" }
+}

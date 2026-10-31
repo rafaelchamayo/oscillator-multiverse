@@ -1,0 +1,22 @@
+{
+  "title": "Oscilador cuántico",
+  "short": "Cuántico",
+  "tagline": "Una onda de probabilidad en un pozo parabólico: combina estados y mira cómo suena la mecánica cuántica.",
+  "objects": {
+    "potential": {
+      "title": "Potencial V(x) = ½x²",
+      "desc": "El mismo resorte del oscilador clásico, ahora como un pozo de energía. Una partícula clásica con energía E rebotaría entre los puntos donde la parábola corta la línea de E."
+    },
+    "packet": {
+      "title": "Función de onda",
+      "desc": "La altura es |ψ(x)|²: la probabilidad de encontrar la partícula en x. Arrástrala para crear un estado coherente en otra posición; láncela para darle momento."
+    },
+    "velocity": {
+      "title": "Momento ⟨p⟩",
+      "desc": "El momento medio del paquete. En pausa, arrastra su punta para elegir ⟨p⟩(0)."
+    }
+  },
+  "params": {},
+  "chips": { "expect": "⟨x⟩, ⟨p⟩" },
+  "panels": { "expect": "Valores esperados" }
+}

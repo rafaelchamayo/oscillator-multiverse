@@ -37,13 +37,27 @@ export interface FrameInfo<S, P> {
   tr: (key: TKey, vars?: Record<string, string | number>) => string;
 }
 
-export type HitRole = 'body' | 'velocityHandle' | 'object';
+export type HitRole = 'body' | 'velocityHandle' | 'object' | 'handle';
+
+/** What a custom handle may do to the simulation while it is dragged. */
+export interface StateEditor {
+  /**
+   * Edits the current state in place. While paused the edited state also becomes the initial
+   * condition (as dragging a body does); while running it changes the motion from now on.
+   */
+  editState(fn: (state: Float64Array) => void): void;
+}
 
 export interface Hit {
   objectId: string;
   role: HitRole;
   /** Body the hit belongs to (body and velocity handle hits in multi-body scenes; default 0). */
   body?: number;
+  /**
+   * `handle` hits: called with the pointer (scene coordinates) on press and on every move while
+   * dragged. The scene's own controls (e.g. the phasor wheels) edit the state through `sim`.
+   */
+  drag?(pt: Vec2, sim: StateEditor): void;
 }
 
 export interface Scene<S, P> {

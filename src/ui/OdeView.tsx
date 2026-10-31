@@ -36,7 +36,9 @@ export function OdeView({ sim }: Props) {
   }, [sim]);
 
   const html = useMemo(() => {
-    if (Object.keys(params).length === 0) return '';
+    // Before the store has the params (a model without any, like the quantum one, needs none).
+    const ready = Object.keys(sim.spec.defaultParams as object).every((k) => k in params);
+    if (!ready) return '';
     const eq = sim.spec.model.latexODE(params);
     const tex = eq.matrix
       ? matrixToLatex(eq.matrix, (ids, l) =>
