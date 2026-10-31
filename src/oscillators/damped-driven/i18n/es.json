@@ -53,5 +53,13 @@
     "overdamped": "Sobreamortiguado",
     "resonance": "Resonancia",
     "beats": "Pulsaciones"
+  },
+  "presetInfo": {
+    "undamped": "Sin fricción ni motor (b = 0, F₀ = 0). La energía se conserva: oscila para siempre con la misma amplitud y frecuencia ω₀ = √(k/m).",
+    "underdamped": "Fricción pequeña (γ = b/2m < ω₀). Sigue oscilando, pero la amplitud decae como e^(−γt) y la frecuencia baja un poco: ω_d = √(ω₀² − γ²).",
+    "critical": "γ = ω₀. Vuelve al equilibrio lo más rápido posible sin pasarse ni oscilar: es lo que buscan los amortiguadores de un auto.",
+    "overdamped": "γ > ω₀. Tanta fricción que ya no oscila: se arrastra hacia el equilibrio, y tarda más que en el caso crítico.",
+    "resonance": "El motor empuja al ritmo natural del sistema (ω = ω_res ≈ ω₀). Cada empujón suma energía y la amplitud crece hasta que el amortiguador disipa lo que el motor aporta.",
+    "beats": "Sin fricción y con ω cerca de ω₀. La oscilación libre y la forzada se suman e interfieren: la amplitud crece y decrece con periodo 2π/|ω₀ − ω|."
   }
 }

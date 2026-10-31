@@ -53,5 +53,13 @@
     "overdamped": "Overdamped",
     "resonance": "Resonance",
     "beats": "Beats"
+  },
+  "presetInfo": {
+    "undamped": "No friction, no motor (b = 0, F₀ = 0). Energy is conserved: it oscillates forever with the same amplitude at ω₀ = √(k/m).",
+    "underdamped": "Light friction (γ = b/2m < ω₀). It still oscillates, but the amplitude decays as e^(−γt) and the frequency drops a little: ω_d = √(ω₀² − γ²).",
+    "critical": "γ = ω₀. Returns to equilibrium as fast as possible without overshooting or oscillating: what a car's shock absorbers aim for.",
+    "overdamped": "γ > ω₀. So much friction that it no longer oscillates: it creeps back to equilibrium, more slowly than in the critical case.",
+    "resonance": "The motor pushes at the system's natural rhythm (ω = ω_res ≈ ω₀). Every push adds energy and the amplitude grows until the damper dissipates what the motor supplies.",
+    "beats": "No friction and ω close to ω₀. The free and the driven oscillations add up and interfere: the amplitude swells and fades with period 2π/|ω₀ − ω|."
   }
 }

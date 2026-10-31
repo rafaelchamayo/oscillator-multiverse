@@ -99,3 +99,15 @@ export const StopIcon = () => (
     <rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor" stroke="none" />
   </svg>
 );
+
+export const ChevronUpIcon = () => (
+  <svg {...base} width={16} height={16}>
+    <path d="M6 15l6-6 6 6" />
+  </svg>
+);
+
+export const ChevronDownIcon = () => (
+  <svg {...base} width={16} height={16}>
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+);

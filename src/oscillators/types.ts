@@ -55,6 +55,8 @@ export interface SimExtras {
 export interface PresetDef {
   id: string;
   labelKey: TKey;
+  /** Explanation shown while the preset button is hovered or focused. */
+  descKey?: TKey;
   params: Record<string, number>;
   /** x₀ measured from the equilibrium, and v₀. */
   init: MechanicalInit;

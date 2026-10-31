@@ -7,6 +7,7 @@ const ROWS: { keys: (TKey | string)[]; what: TKey }[] = [
   { keys: ['keys.space'], what: 'help.play' },
   { keys: ['R'], what: 'help.reset' },
   { keys: ['V'], what: 'help.perspective' },
+  { keys: ['E'], what: 'help.ode' },
   { keys: ['P'], what: 'help.present' },
   { keys: ['G'], what: 'help.record' },
   { keys: ['?'], what: 'help.help' },

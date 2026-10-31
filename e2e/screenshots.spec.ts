@@ -257,3 +257,24 @@ test('screenshot shortcuts help', async ({ page }) => {
   await page.waitForTimeout(200);
   await page.screenshot({ path: 'e2e/screenshots/help.png' });
 });
+
+test('screenshot damped-driven narrow window + preset explanation', async ({ page }) => {
+  await page.setViewportSize({ width: 860, height: 720 });
+  await open(page, '/#/damped-driven', 'es');
+  await page.getByTestId('chip-energy').click();
+  await sim(page, 's.play();');
+  await page.waitForTimeout(1500);
+  await page.getByTestId('preset-critical').hover();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: 'e2e/screenshots/dd-narrow-preset.png' });
+});
+
+test('screenshot sho energy bar (full at start) + bounce off the wall', async ({ page }) => {
+  await open(page, '/#/sho', 'es');
+  await sim(
+    page,
+    's.setPausedState(0, 4); s.play(); for (let i = 0; i < 110; i++) s.loop.advanceFrame(); s.pause();',
+  );
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'e2e/screenshots/sho-bounce.png' });
+});

@@ -10,7 +10,7 @@ import {
   timeStep,
 } from '../../render/plots/PaperTrace';
 import { drawArrow, drawHandle } from '../../render/scene/Arrow';
-import { MetalBlock, drawExclamation } from '../../render/scene/Block';
+import { MetalBlock } from '../../render/scene/Block';
 import { alpha, approach, clamp, drawCallout, roundRectPath } from '../../render/scene/draw';
 import { Particles } from '../../render/scene/Particles';
 import { drawSpring, springStyleFromK } from '../../render/scene/Spring';
@@ -115,7 +115,7 @@ export function createSpringBlockScene<P extends SpringBlockParams>(
   // Smoothed side so changing m animates the block size.
   let side = cfg.blockSide(1);
   let firstUpdate = true;
-  /** Scale of the energy bar (J at full height); grows fast, shrinks slowly. */
+  /** Scale of the energy bar (J at full height). */
   let eScale = 0;
   /** Largest recent force (N), for the common force-vector scale. */
   let fScale = 0;
@@ -208,38 +208,46 @@ export function createSpringBlockScene<P extends SpringBlockParams>(
     }
   };
 
-  /** Stacked K + U bar beside the block; its total height is E, so it stays still. */
-  const drawEnergyBar = (g: CanvasRenderingContext2D, f: F<P>, x: number, cw: number) => {
+  /**
+   * Stacked K + U bar pinned to the stage's top-right corner. Full height is the largest E since
+   * the state was last set, so a conserved E fills the bar while K and U trade places, and
+   * damping shows as a shrinking total.
+   */
+  const drawEnergyBar = (g: CanvasRenderingContext2D, f: F<P>) => {
     const K = f.obs.K ?? 0;
     const U = f.obs.Ueq ?? 0;
-    if (eScale <= 0) return;
-    const corner = f.view.toScreen(x - side / 2, cw - side / 2);
-    const H = 84;
-    const W = 14;
-    const left = corner.x - 58;
-    const bottom = Math.max(corner.y, H + 24);
-    const hk = Math.min(H, (K / eScale) * H);
-    const hu = Math.min(H - hk, (U / eScale) * H);
-    roundRectPath(g, left, bottom - H, W, H, 4);
+    const H = 120;
+    const W = 18;
+    const left = f.view.width - 30 - W;
+    const top = 46;
+    const bottom = top + H;
+    const scale = Math.max(eScale, 1e-9);
+    const hk = Math.min(H, (K / scale) * H);
+    const hu = Math.min(H - hk, (U / scale) * H);
+    roundRectPath(g, left, top, W, H, 4);
     g.fillStyle = alpha(colors.ink, 0.06);
     g.fill();
     g.fillStyle = colors.primary;
     g.fillRect(left, bottom - hk, W, hk);
     g.fillStyle = colors.warning;
     g.fillRect(left, bottom - hk - hu, W, hu);
-    g.fillStyle = colors.ink;
-    g.fillRect(left - 3, bottom - hk - hu - 1, W + 6, 2);
-    roundRectPath(g, left, bottom - H, W, H, 4);
+    if (hk + hu > 0.5) {
+      g.fillStyle = colors.ink;
+      g.fillRect(left - 3, bottom - hk - hu - 1, W + 6, 2);
+    }
+    roundRectPath(g, left, top, W, H, 4);
     g.strokeStyle = colors.ink;
     g.lineWidth = 2;
     g.stroke();
-    g.font = `600 11px ${fonts.mono}`;
+    g.font = `600 12px ${fonts.mono}`;
     g.textAlign = 'right';
     g.textBaseline = 'middle';
-    if (hk > 12) label(g, 'K', left - 5, bottom - hk / 2, colors.primary);
-    if (hu > 12) label(g, 'U', left - 5, bottom - hk - hu / 2, colors.warning);
+    if (hk > 12) label(g, 'K', left - 6, bottom - hk / 2, colors.primary);
+    if (hu > 12) label(g, 'U', left - 6, bottom - hk - hu / 2, colors.warning);
     g.textAlign = 'center';
-    label(g, 'E', left + W / 2, bottom - H - 10, colors.ink);
+    label(g, 'E', left + W / 2, top - 12, colors.ink);
+    g.font = `500 11px ${fonts.mono}`;
+    label(g, `${formatNumber(K + U)} J`, left + W / 2 - 4, bottom + 14, colors.textMuted);
   };
 
   const scene: MechanicalScene<P> = {
@@ -283,9 +291,9 @@ export function createSpringBlockScene<P extends SpringBlockParams>(
       });
       particles.update(f.realDt);
 
+      // While the state is being set (paused or held) the bar is full; running, it keeps the max.
       const E = f.obs.Eeq ?? 0;
-      if (E * 1.1 > eScale) eScale = E * 1.25;
-      else eScale = approach(eScale, Math.max(E * 1.25, 1e-3), 0.8, f.realDt);
+      eScale = f.running && !f.held ? Math.max(eScale, E) : E;
 
       let maxF = 0;
       for (const fv of cfg.forces ?? []) {
@@ -449,10 +457,6 @@ export function createSpringBlockScene<P extends SpringBlockParams>(
           { ...callout, anchor: mark },
         );
       }
-      if (f.held && !f.serious) {
-        const p = view.toScreen(x - side / 2, cw - side / 2);
-        drawExclamation(g, p.x - 4, p.y - 4, f.tr('scene.wii'));
-      }
 
       // Force labels at the arrow tips.
       if (fScale > 0) {
@@ -469,7 +473,7 @@ export function createSpringBlockScene<P extends SpringBlockParams>(
       }
 
       if (f.axes) drawPaperLabels(g, f, o);
-      if (f.chips.energy) drawEnergyBar(g, f, x, cw);
+      if (f.chips.energy) drawEnergyBar(g, f);
       for (const p of parts) p.drawOverlay?.(g, f, geo);
       if (paperHover) {
         const p = paperPoint(paperHover.x, paperHover.t, f.t, PAPER_W, paperSpeed(f.window));

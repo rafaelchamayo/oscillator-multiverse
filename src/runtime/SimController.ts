@@ -113,6 +113,7 @@ export class SimController<P> {
       params: { ...spec.defaultParams },
       state: spec.model.createState(spec.defaultParams, this.ic),
       onStep: ({ t, state, manual }) => {
+        if (!manual) this.bounce(state);
         spec.model.observables(state, this.loop.params, t, this.stepObs);
         if (this.history.offer(t, this.stepObs, manual)) {
           this.extras?.onSample?.(
@@ -323,6 +324,17 @@ export class SimController<P> {
     this.held = false;
     this.holdTarget = null;
     if (this.loop.isHeld) this.loop.release(x, v);
+  }
+
+  /**
+   * Elastic bounce off the ends of the track (the wall side and the end of the floor), so the
+   * body and its trace never leave the scene. Within the track the motion is the model's.
+   */
+  private bounce(state: Float64Array): void {
+    const k = this.spec.model;
+    const x = k.getPos(state);
+    const c = this.scene.clampX(x, this.loop.params);
+    if (c !== x) k.setKinematic(state, 2 * c - x, -k.getVel(state));
   }
 
   frameInfo(realDt: number): FrameInfo<Float64Array, P> {

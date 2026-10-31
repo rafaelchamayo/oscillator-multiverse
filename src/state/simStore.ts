@@ -38,6 +38,8 @@ interface SimUiState {
   recording: boolean;
   /** Keyboard shortcuts dialog. */
   helpOpen: boolean;
+  /** The interactive ODE pill is collapsed to a small button. */
+  odeHidden: boolean;
   setSerious: (v: boolean) => void;
   togglePerspective: () => void;
   setGravity: (v: boolean) => void;
@@ -46,6 +48,7 @@ interface SimUiState {
   setPresenting: (v: boolean) => void;
   setPresent: (o: Partial<PresentOptions>) => void;
   setHelpOpen: (v: boolean) => void;
+  setOdeHidden: (v: boolean) => void;
 }
 
 export const useSimStore = create<SimUiState>((set) => ({
@@ -63,6 +66,7 @@ export const useSimStore = create<SimUiState>((set) => ({
   present: { ode: true, axes: true, background: 'gradient' },
   recording: false,
   helpOpen: false,
+  odeHidden: false,
   setSerious: (serious) => set({ serious }),
   togglePerspective: () =>
     set((s) => ({
@@ -80,4 +84,5 @@ export const useSimStore = create<SimUiState>((set) => ({
   setPresenting: (presenting) => set({ presenting }),
   setPresent: (o) => set((s) => ({ present: { ...s.present, ...o } })),
   setHelpOpen: (helpOpen) => set({ helpOpen }),
+  setOdeHidden: (odeHidden) => set({ odeHidden }),
 }));

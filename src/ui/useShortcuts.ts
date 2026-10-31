@@ -30,6 +30,8 @@ export function useShortcuts(sim: SimController<any>): void {
         sim.reset();
       } else if ((e.key === 'v' || e.key === 'V') && sim.spec.setGravity) {
         ui.togglePerspective();
+      } else if (e.key === 'e' || e.key === 'E') {
+        ui.setOdeHidden(!ui.odeHidden);
       } else if (e.key === 'p' || e.key === 'P') {
         ui.setPresenting(!ui.presenting);
       } else if (e.key === 'g' || e.key === 'G') {

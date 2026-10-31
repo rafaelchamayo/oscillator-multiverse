@@ -1,9 +1,14 @@
 import katex from 'katex';
-import { useEffect, useMemo, useRef, type PointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, type PointerEvent } from 'react';
 import { equationToLatex } from '../models/latex';
 import { useT } from '../i18n/useT';
 import type { SimController } from '../runtime/SimController';
 import { useSimStore } from '../state/simStore';
+import { ChevronDownIcon, ChevronUpIcon } from './icons';
+
+/** Natural font size of the equation (px); it shrinks to fit narrow stages. */
+const ODE_FONT = 19;
+const MIN_FONT = 10;
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,11 +18,14 @@ interface Props {
 /**
  * The equation of motion with the current values, rendered by KaTeX. Every term is tagged with
  * `term--<id>` so hovering it highlights its object and hovering the object highlights it.
+ * It scales down with the stage so it never covers the clock, and can be collapsed (E).
  */
 export function OdeView({ sim }: Props) {
   const t = useT();
   const params = useSimStore((s) => s.params);
   const highlightId = useSimStore((s) => s.highlightId);
+  const hidden = useSimStore((s) => s.odeHidden);
+  const setHidden = useSimStore((s) => s.setOdeHidden);
 
   const termToObject = useMemo(() => {
     const m = new Map<string, string>();
@@ -41,6 +49,25 @@ export function OdeView({ sim }: Props) {
   const lit = sim.spec.objects.find((o) => o.id === highlightId)?.terms ?? [];
   const litKey = lit.join(' ');
   const ref = useRef<HTMLDivElement>(null);
+  const pill = useRef<HTMLDivElement>(null);
+
+  // Fit the pill to its row (.stage-top keeps clear of the clock and the energy bar).
+  // Everything inside is sized in em, so its width is proportional to the font size.
+  useLayoutEffect(() => {
+    const el = pill.current;
+    const row = el?.parentElement;
+    if (!el || !row) return;
+    const fit = () => {
+      el.style.fontSize = `${ODE_FONT}px`;
+      const avail = row.clientWidth;
+      const k = Math.min(1, avail / el.offsetWidth);
+      el.style.fontSize = `${Math.max(MIN_FONT, ODE_FONT * k)}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(row);
+    return () => ro.disconnect();
+  }, [html, badge?.key, hidden]);
 
   // Tag the highlighted terms (KaTeX output is plain HTML, so classes are toggled directly).
   useEffect(() => {
@@ -57,8 +84,24 @@ export function OdeView({ sim }: Props) {
     sim.setTermHover((term && termToObject.get(term)) ?? null);
   };
 
+  if (hidden) {
+    return (
+      <button
+        type="button"
+        className="ode-show"
+        data-testid="ode-show"
+        aria-label={t('ode.show')}
+        title={t('ode.show')}
+        onClick={() => setHidden(false)}
+      >
+        {t('present.ode')}
+        <ChevronDownIcon />
+      </button>
+    );
+  }
+
   return (
-    <div className="ode" role="figure" aria-label={t('ode.label')} title={t('ode.hint')}>
+    <div className="ode" ref={pill} role="figure" aria-label={t('ode.label')} title={t('ode.hint')}>
       <div
         className="ode__math"
         data-testid="ode"
@@ -73,6 +116,16 @@ export function OdeView({ sim }: Props) {
           {t(badge.key)}
         </span>
       )}
+      <button
+        type="button"
+        className="ode__hide"
+        data-testid="ode-hide"
+        aria-label={t('ode.hide')}
+        title={t('ode.hide')}
+        onClick={() => setHidden(true)}
+      >
+        <ChevronUpIcon />
+      </button>
     </div>
   );
 }

@@ -166,6 +166,21 @@ Minor, reversible decisions taken during implementation, and why.
   other shortcuts are off while it is open); Esc closes it or leaves presentation. Focus rings come from the
   global `:focus-visible` style (tested on the toolbar).
 
+## Post-Phase 6 revision (owner's feedback)
+
+- **Track stops**: the body bounces elastically (x → 2c − x, v → −v) off the ends of the track, the limits
+  `clampX` already used for dragging: the wall side (spring at its minimum length) and the end of the floor.
+  Before, a strong fling or a resonance could take the block through the wall and the trace off the paper.
+  Within the track the motion is exactly the model's; the physics tests run on the model and are unaffected.
+- **Energy bar**: pinned to the stage's top-right corner. Its full height is E when the state was last set
+  (paused or held), then the largest E while running, so a conserved E fills the bar while K and U trade
+  places, and damping shows as a shrinking total. In a driven steady state U_max = ½kA² and K_max = ½mω²A²
+  (the motion follows the motor's ω, not ω₀), so U peaks higher when ω < ω₀, K when ω > ω₀.
+- **ODE pill**: sized in em and scaled down (19 → 10 px) to fit between the clock and the energy bar; on
+  narrow stages the top row drops below the clock. It can be collapsed to a small "ODE" button (E).
+- **Toolbar**: container queries on the stage shrink it at 760 and 560 px of stage width.
+- Presets explain their scenario on hover/focus (`descKey`). The "wheee!" exclamation is gone.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by

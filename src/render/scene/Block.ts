@@ -1,4 +1,4 @@
-import { colors, fonts } from '../theme';
+import { colors } from '../theme';
 import { alpha, clamp } from './draw';
 
 export interface BlockMotionInput {
@@ -145,18 +145,4 @@ export class MetalBlock {
     g.stroke();
     g.restore();
   }
-}
-
-/** Short playful exclamation drawn next to the block while it is held. */
-export function drawExclamation(
-  g: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  text: string,
-): void {
-  g.font = `600 18px ${fonts.display}`;
-  g.fillStyle = colors.highlight;
-  g.textAlign = 'right';
-  g.textBaseline = 'bottom';
-  g.fillText(text, x, y);
 }

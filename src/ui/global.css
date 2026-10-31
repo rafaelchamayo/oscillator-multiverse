@@ -251,9 +251,10 @@ button {
   }
 }
 
-/* Simulation stage */
+/* Simulation stage: a size container, so its overlays adapt to the stage, not the window. */
 .stage--sim {
   display: block;
+  container: stage / inline-size;
 }
 
 .stage__canvas {
@@ -474,11 +475,12 @@ button {
 }
 
 /* Equation of motion (top of the stage) */
+/* Between the clock (top left) and the energy bar (top right); OdeView fits the ODE to it. */
 .stage-top {
   position: absolute;
   top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 150px;
+  right: 150px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -490,12 +492,13 @@ button {
   pointer-events: auto;
 }
 
+/* Sized in em: OdeView scales the font so the pill fits between the clock and the energy bar. */
 .ode {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 0.7em;
   white-space: nowrap;
-  padding: 2px 22px;
+  padding: 0.1em 0.5em 0.1em 1.15em;
   border-radius: var(--r-pill);
   background: var(--c-surface);
   border: var(--ink-width) solid var(--c-border);
@@ -505,7 +508,52 @@ button {
 }
 
 .ode .katex-display {
-  margin: 8px 0;
+  margin: 0.42em 0;
+}
+
+.ode__hide,
+.ode-show {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out);
+}
+
+.ode__hide {
+  width: 1.5em;
+  height: 1.5em;
+  flex: none;
+}
+
+.ode__hide svg {
+  width: 0.85em;
+  height: 0.85em;
+}
+
+.ode__hide:hover,
+.ode-show:hover {
+  background: var(--c-surface-raised);
+  color: var(--c-primary);
+}
+
+.ode-show {
+  height: 30px;
+  padding: 0 10px 0 14px;
+  font-family: var(--f-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+  background: var(--c-surface);
+  border: var(--ink-width) solid var(--c-border);
+  box-shadow: 0 3px 0 0 color-mix(in srgb, var(--c-ink) 10%, transparent);
 }
 
 .ode .term {
@@ -650,10 +698,10 @@ button {
 }
 
 .ode__badge {
-  padding: 4px 10px;
+  padding: 0.33em 0.83em;
   border-radius: var(--r-pill);
   font-family: var(--f-ui);
-  font-size: 12px;
+  font-size: 0.63em;
   font-weight: 600;
   border: 1.5px solid currentColor;
 }
@@ -679,9 +727,42 @@ button {
 
 .presets {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.presets__row {
+  display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
+}
+
+.presets__tip {
+  max-width: 440px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  border: var(--ink-width) solid var(--c-border);
+  box-shadow: 0 4px 0 0 color-mix(in srgb, var(--c-ink) 10%, transparent);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--c-text);
+  pointer-events: none;
+  animation: rise var(--t-fast) var(--ease-out) both;
+}
+
+.presets__tip strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--c-primary);
+  font-size: 13px;
+}
+
+.presets__tip p {
+  margin: 0;
+  color: var(--c-text-muted);
 }
 
 .presets__btn {
@@ -972,4 +1053,84 @@ kbd {
   font-size: 12px;
   font-weight: 600;
   text-align: center;
+}
+
+/* Narrow stages: a smaller toolbar, and the top row drops below the clock. */
+@container stage (max-width: 760px) {
+  .toolbar {
+    gap: 4px;
+    padding: 5px 7px 5px 5px;
+    bottom: 12px;
+  }
+
+  .toolbar__btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 6px;
+  }
+
+  .toolbar__btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toolbar__btn--primary {
+    width: 38px;
+    height: 38px;
+  }
+
+  .toolbar__btn--text {
+    min-width: 44px;
+    font-size: 13px;
+  }
+
+  .toolbar__sep {
+    height: 20px;
+    margin: 0;
+  }
+}
+
+@container stage (max-width: 560px) {
+  .stage-top {
+    top: 46px;
+    left: 12px;
+    right: 64px;
+  }
+
+  .toolbar {
+    gap: 2px;
+    padding: 4px;
+    bottom: 8px;
+  }
+
+  .toolbar__btn {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 4px;
+  }
+
+  .toolbar__btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .toolbar__btn--primary {
+    width: 34px;
+    height: 34px;
+  }
+
+  .toolbar__btn--text {
+    min-width: 38px;
+    font-size: 12px;
+  }
+
+  .toolbar__sep {
+    display: none;
+  }
+
+  .presets__btn {
+    height: 24px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
 }

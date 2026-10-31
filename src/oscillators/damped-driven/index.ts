@@ -279,30 +279,35 @@ export const dampedDrivenPlugin: OscillatorPlugin = {
       {
         id: 'undamped',
         labelKey: 'osc.damped-driven.presets.undamped',
+        descKey: 'osc.damped-driven.presetInfo.undamped',
         params: { ...base, b: 0, F0: 0, omega: 1.5 },
         init: { x0: 0.5, v0: 0 },
       },
       {
         id: 'underdamped',
         labelKey: 'osc.damped-driven.presets.underdamped',
+        descKey: 'osc.damped-driven.presetInfo.underdamped',
         params: { ...base, b: 0.4, F0: 0, omega: 1.5 },
         init: { x0: 0.5, v0: 0 },
       },
       {
         id: 'critical',
         labelKey: 'osc.damped-driven.presets.critical',
+        descKey: 'osc.damped-driven.presetInfo.critical',
         params: { ...base, b: 4, F0: 0, omega: 1.5 },
         init: { x0: 0.5, v0: 0 },
       },
       {
         id: 'overdamped',
         labelKey: 'osc.damped-driven.presets.overdamped',
+        descKey: 'osc.damped-driven.presetInfo.overdamped',
         params: { ...base, b: 10, F0: 0, omega: 1.5 },
         init: { x0: 0.5, v0: 0 },
       },
       {
         id: 'resonance',
         labelKey: 'osc.damped-driven.presets.resonance',
+        descKey: 'osc.damped-driven.presetInfo.resonance',
         // ω = ω_res = √(ω₀² − 2γ²) with γ = 0.1: the steady amplitude is the peak, ≈ 0.75 m.
         params: { ...base, b: 0.2, F0: 0.3, omega: 1.995 },
         init: { x0: 0, v0: 0 },
@@ -311,6 +316,7 @@ export const dampedDrivenPlugin: OscillatorPlugin = {
       {
         id: 'beats',
         labelKey: 'osc.damped-driven.presets.beats',
+        descKey: 'osc.damped-driven.presetInfo.beats',
         // Envelope 2F₀/(m|ω₀² − ω²|) ≈ 0.79 m, beat period 2π/|ω₀ − ω| ≈ 31 s.
         params: { ...base, b: 0, F0: 0.3, omega: 1.8 },
         init: { x0: 0, v0: 0 },
