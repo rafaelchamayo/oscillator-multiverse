@@ -278,3 +278,13 @@ test('screenshot sho energy bar (full at start) + bounce off the wall', async ({
   await page.waitForTimeout(300);
   await page.screenshot({ path: 'e2e/screenshots/sho-bounce.png' });
 });
+
+test('screenshot coupled placeholder (3 blocks, running + paused tag)', async ({ page }) => {
+  await open(page, '/#/coupled', 'es');
+  await sim(page, 's.play(); for (let i = 0; i < 50; i++) s.loop.advanceFrame();');
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'e2e/screenshots/coupled-running.png' });
+  await sim(page, 's.pause(); s.activeBody = 1; s.setPausedState(-0.15, 1.2, 1);');
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'e2e/screenshots/coupled-paused.png' });
+});

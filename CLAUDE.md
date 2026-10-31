@@ -25,6 +25,9 @@ Spec: `prompt_claude_code_oscillator_multiverse.md`. Decisions log: `DECISIONS.m
 10. `src/presentation/` — 1920×1080 presentation layout (`compose.ts`), canvas ODE renderer, WebM `Recorder`.
 11. `src/runtime/SimController.ts` — binds a plugin's model + `SimulationLoop` + scene + `ViewTransform` to a canvas and runs rAF.
 
+Multi-body tabs: `Kinematic` methods take a body index, hits carry `body`, and the scene maps a body's
+displacement to scene u with `bodyU` and keeps bodies apart with `constrain` (see `src/oscillators/coupled/`).
+
 Scene coordinates are meters: u along the oscillation, w across it (+w is down at angle 0). Physical objects
 size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on screen). Upright text goes in
 `drawOverlay` (CSS pixels).
@@ -79,6 +82,6 @@ The SHO (`src/oscillators/sho/`) is the worked example.
 Coupled oscillators tab (N = 2…5 masses between two walls; plan in DECISIONS.md):
 
 - [x] C1 — Physics (chain model, Jacobi normal modes, modal coordinates, matrix ODE, numerical tests)
-- [ ] C2 — Multi-body runtime (body index in Kinematic/hold/hit, initial state snapshot, collisions)
+- [x] C2 — Multi-body runtime (body index in Kinematic/hold/hit, initial state snapshot, collisions)
 - [ ] C3 — Scene and UI (N selector, popovers, matrix ODE, mode presets, N traces, energy bar)
 - [ ] C4 — Plots and presentation (energy per mass, normal coordinates, mode shapes, configuration space)

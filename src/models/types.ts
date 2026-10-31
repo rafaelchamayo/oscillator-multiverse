@@ -47,11 +47,15 @@ export interface MatrixOde {
   K: MatrixEntry[][];
 }
 
-/** Capability of 1-DOF mechanical models: the hand can impose position and velocity. */
+/**
+ * Capability of mechanical models: the hand can impose a body's position and velocity.
+ * `i` is the body (0 for 1-DOF models); `bodies` says how many there are (default 1).
+ */
 export interface Kinematic<S> {
-  getPos(s: S): number;
-  getVel(s: S): number;
-  setKinematic(s: S, x: number, v: number): void;
+  getPos(s: S, i?: number): number;
+  getVel(s: S, i?: number): number;
+  setKinematic(s: S, x: number, v: number, i?: number): void;
+  bodies?(params: unknown): number;
 }
 
 export interface MechanicalInit {

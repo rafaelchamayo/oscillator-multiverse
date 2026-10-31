@@ -1,5 +1,6 @@
 import { symmetricEigen } from '../../core/math/eigen';
 import { fmtCoef } from '../latex';
+import { chainKinematic } from '../mechanical';
 import { odeModel } from '../ode';
 import type { MatrixEntry } from '../types';
 
@@ -142,7 +143,9 @@ export function modeInit(p: P, mode: number, amplitude: number): CoupledInit {
   return { x: phi.map((c) => (c / max) * amplitude), v: phi.map(() => 0) };
 }
 
-export const coupledModel = odeModel<P, CoupledInit>(
+const kinematic = chainKinematic<P>(MAX_N, countOf);
+
+export const coupledModel = odeModel<P, CoupledInit, typeof kinematic>(
   {
     dim: 2 * MAX_N,
     deriv: (_t, y, p, out) => {
@@ -163,6 +166,7 @@ export const coupledModel = odeModel<P, CoupledInit>(
   },
   {
     id: 'coupled',
+    ...kinematic,
     createState: (p, init) => {
       const y = new Float64Array(2 * MAX_N);
       const n = countOf(p);

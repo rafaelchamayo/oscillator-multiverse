@@ -64,15 +64,19 @@ export class PointerController<P> {
       // Synthetic or already-released pointers cannot be captured; input still works.
     }
     const k = this.sim.spec.model;
+    if (hit && (hit.role === 'velocityHandle' || hit.role === 'body') && !this.sim.held) {
+      this.sim.activeBody = hit.body ?? 0;
+    }
+    const i = this.sim.activeBody;
     if (hit?.role === 'velocityHandle' && !this.sim.running) {
       this.mode = { kind: 'handle' };
     } else if (hit?.role === 'body') {
-      const x = k.getPos(this.sim.state);
+      const x = k.getPos(this.sim.state, i);
       this.mode = { kind: 'body', offset: x - pt.x };
       this.lastX = x;
       this.fling.reset();
       this.fling.add(e.timeStamp, x);
-      this.sim.beginHold(x);
+      this.sim.beginHold(x, i);
     } else {
       const l = this.local(e);
       this.mode = { kind: 'pan', lastX: l.x, lastY: l.y };
@@ -98,18 +102,19 @@ export class PointerController<P> {
       return;
     }
     const k = sim.spec.model;
+    const i = sim.activeBody;
     if (m.kind === 'handle') {
-      const v = sim.scene.velocityFromHandle(pt.x, k.getPos(sim.state), sim.params);
-      sim.setPausedState(k.getPos(sim.state), v);
+      const x = k.getPos(sim.state, i);
+      sim.setPausedState(x, sim.scene.velocityFromHandle(pt.x, x, sim.params, i), i);
       return;
     }
-    const x = sim.scene.clampX(pt.x + m.offset, sim.params);
+    const x = sim.scene.clampX(pt.x + m.offset, sim.params, i, sim.state);
     this.lastX = x;
     this.fling.add(e.timeStamp, x);
     if (sim.running) {
       sim.holdTarget = { x, v: this.simVelocity(e.timeStamp) };
     } else {
-      sim.setPausedState(x, k.getVel(sim.state));
+      sim.setPausedState(x, k.getVel(sim.state, i), i);
     }
   };
 

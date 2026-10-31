@@ -6,7 +6,7 @@ export const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
 export interface StepInfo<S> {
   t: number;
   state: S;
-  /** True while the hand holds the body (kinematic motion, no integration). */
+  /** True while the hand holds a body (its motion is imposed). */
   manual: boolean;
 }
 
@@ -41,6 +41,7 @@ export class SimulationLoop<S, P> {
   private acc = 0;
   private readonly maxFrameTime: number;
   private held = false;
+  private holdBody = 0;
   private holdFrom = { x: 0, v: 0 };
   private holdTo = { x: 0, v: 0 };
 
@@ -59,6 +60,11 @@ export class SimulationLoop<S, P> {
 
   get isHeld(): boolean {
     return this.held;
+  }
+
+  /** The body being held (meaningful while `isHeld`). */
+  get heldBody(): number {
+    return this.holdBody;
   }
 
   /** Advance by a real-time interval (seconds). Returns the number of steps taken. */
@@ -87,24 +93,26 @@ export class SimulationLoop<S, P> {
   }
 
   /**
-   * Start or update holding the body at (x, v). While held, integration is suspended and
-   * steps interpolate linearly from the last imposed position to this target, so time and
-   * traces keep flowing smoothly. Requires a `Kinematic` model.
+   * Start or update holding body `i` at (x, v). Steps interpolate its position linearly from
+   * the last imposed one to this target, so time and traces keep flowing smoothly. A 1-DOF
+   * model is not integrated meanwhile; with several bodies the others keep integrating, pulled
+   * by the held one. Requires a `Kinematic` model.
    */
-  hold(x: number, v: number): void {
+  hold(x: number, v: number, i = 0): void {
     const k = this.requireKinematic();
-    if (!this.held) {
+    if (!this.held || this.holdBody !== i) {
       this.held = true;
-      this.holdTo = { x: k.getPos(this.state), v: k.getVel(this.state) };
+      this.holdBody = i;
+      this.holdTo = { x: k.getPos(this.state, i), v: k.getVel(this.state, i) };
     }
-    this.holdFrom = { x: k.getPos(this.state), v: this.holdTo.v };
+    this.holdFrom = { x: k.getPos(this.state, i), v: this.holdTo.v };
     this.holdTo = { x, v };
   }
 
-  /** Release the body at (x, v): integration resumes from there. */
+  /** Release the held body at (x, v): integration resumes from there. */
   release(x: number, v: number): void {
     const k = this.requireKinematic();
-    k.setKinematic(this.state, x, v);
+    k.setKinematic(this.state, x, v, this.holdBody);
     this.held = false;
   }
 
@@ -128,11 +136,13 @@ export class SimulationLoop<S, P> {
 
   private doSteps(n: number): void {
     const k = this.held ? this.requireKinematic() : undefined;
+    const multi = !!k && (k.bodies?.(this.params) ?? 1) > 1;
     for (let i = 0; i < n; i++) {
       if (k) {
+        if (multi) this.model.step(this.state, this.params, this.t, this.dt);
         const f = (i + 1) / n;
         const x = this.holdFrom.x + (this.holdTo.x - this.holdFrom.x) * f;
-        k.setKinematic(this.state, x, this.holdTo.v);
+        k.setKinematic(this.state, x, this.holdTo.v, this.holdBody);
       } else {
         this.model.step(this.state, this.params, this.t, this.dt);
       }

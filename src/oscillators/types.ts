@@ -4,14 +4,15 @@ import type { Plot } from '../render/plots/types';
 import type { MechanicalScene } from '../render/scene/types';
 
 /**
- * Simulation of a 1-DOF mechanical oscillator: a body with position/velocity that the
- * user can drag, fling and grab. Other kinds (coupled, quantum) will add their own spec.
+ * Simulation of a mechanical oscillator: one or more bodies with position/velocity that the
+ * user can drag, fling and grab (`Kinematic` with a body index). `I` is what the model's
+ * `createState` takes ({x0, v0} for 1-DOF tabs).
  */
-export interface MechanicalSimSpec<P> {
+export interface MechanicalSimSpec<P, I = MechanicalInit> {
   kind: 'mechanical1d';
-  model: Model<Float64Array, P, MechanicalInit> & Kinematic<Float64Array>;
+  model: Model<Float64Array, P, I> & Kinematic<Float64Array>;
   defaultParams: P;
-  defaultInit: MechanicalInit;
+  defaultInit: I;
   /** Fastest initial velocity the hand can impose (m/s). */
   maxSpeed: number;
   createScene(): MechanicalScene<P>;
@@ -58,8 +59,12 @@ export interface PresetDef {
   /** Explanation shown while the preset button is hovered or focused. */
   descKey?: TKey;
   params: Record<string, number>;
-  /** x₀ measured from the equilibrium, and v₀. */
-  init: MechanicalInit;
+  /**
+   * 1-DOF: x₀ measured from the equilibrium, and v₀. Otherwise a function of the preset's
+   * params returning the model's init (e.g. a normal mode, which depends on m and k).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init: MechanicalInit | ((params: any) => unknown);
   chips?: Record<string, boolean>;
 }
 
@@ -132,5 +137,5 @@ export interface OscillatorPlugin {
   /** Absent while the tab is still a placeholder. */
   // Params differ per plugin; the runtime only passes them back to the plugin's own model/scene.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sim?: MechanicalSimSpec<any>;
+  sim?: MechanicalSimSpec<any, any>;
 }

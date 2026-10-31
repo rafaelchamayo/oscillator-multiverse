@@ -50,8 +50,10 @@ export class SimController<P> {
   readonly history: History;
   /** The plugin's helpers (resonance sweep...), fed with every history sample. */
   readonly extras: SimExtras | undefined;
-  /** Conditions restored by Reset; updated whenever the user edits x₀ or v₀. */
-  ic: MechanicalInit;
+  /** State restored by Reset; updated whenever the user edits an x₀ or v₀. */
+  initState: Float64Array;
+  /** Body last touched by the hand: drags, the v₀ handle and the tags act on it. */
+  activeBody = 0;
   /** Object under the canvas pointer. */
   hoverId: string | null = null;
   /** Object whose ODE term is under the pointer. */
@@ -61,7 +63,7 @@ export class SimController<P> {
   popoverEl: HTMLElement | null = null;
   /** Pointer over the stage, in scene coordinates. */
   pointer: Vec2 | null = null;
-  /** The hand is holding the body (in any mode). */
+  /** The hand is holding a body (in any mode). */
   held = false;
   /** Latest pointer target while holding during a run, applied every frame. */
   holdTarget: { x: number; v: number } | null = null;
@@ -96,11 +98,12 @@ export class SimController<P> {
   private gravity = NaN;
 
   constructor(
-    readonly spec: MechanicalSimSpec<P>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    readonly spec: MechanicalSimSpec<P, any>,
     /** Plugin id, used to name recordings. */
     readonly id = 'sim',
   ) {
-    this.ic = { ...spec.defaultInit };
+    this.initState = spec.model.createState(spec.defaultParams, spec.defaultInit);
     this.scene = spec.createScene();
     this.extras = spec.createExtras?.({ setParam: (k, v) => this.setParam(k, v) });
     this.history = new History(
@@ -111,7 +114,7 @@ export class SimController<P> {
     this.loop = new SimulationLoop({
       model: spec.model,
       params: { ...spec.defaultParams },
-      state: spec.model.createState(spec.defaultParams, this.ic),
+      state: spec.model.cloneState(this.initState),
       onStep: ({ t, state, manual }) => {
         if (!manual) this.bounce(state);
         spec.model.observables(state, this.loop.params, t, this.stepObs);
@@ -146,6 +149,17 @@ export class SimController<P> {
 
   get running(): boolean {
     return this.loop.running;
+  }
+
+  /** Number of bodies in use (1 for 1-DOF models). */
+  get bodies(): number {
+    return this.spec.model.bodies?.(this.params) ?? 1;
+  }
+
+  /** Initial conditions of body 0 (the 1-DOF view of `initState`). */
+  get ic(): MechanicalInit {
+    const k = this.spec.model;
+    return { x0: k.getPos(this.initState), v0: k.getVel(this.initState) };
   }
 
   attach(canvas: HTMLCanvasElement, surface: Surface = 'stage'): void {
@@ -262,7 +276,9 @@ export class SimController<P> {
 
   pause(): void {
     this.loop.running = false;
-    if (this.loop.isHeld) this.endHold(this.spec.model.getPos(this.state), 0);
+    if (this.loop.isHeld) {
+      this.endHold(this.spec.model.getPos(this.state, this.loop.heldBody), 0);
+    }
     this.syncStore();
   }
 
@@ -275,7 +291,7 @@ export class SimController<P> {
     this.loop.running = false;
     this.held = false;
     this.holdTarget = null;
-    this.loop.reset(this.spec.model.createState(this.params, this.ic));
+    this.loop.reset(this.spec.model.cloneState(this.initState));
     this.history.clear();
     this.extras?.onReset?.();
     for (const s of this.plots.values()) s.plot.reset?.();
@@ -291,8 +307,17 @@ export class SimController<P> {
     const params = this.params as Record<string, number>;
     Object.assign(params, preset.params);
     if (Number.isFinite(this.gravity)) this.spec.setGravity?.(this.params, this.gravity);
-    const eq = this.spec.equilibrium?.(this.params) ?? 0;
-    this.ic = { x0: eq + preset.init.x0, v0: preset.init.v0 };
+    const { init } = preset;
+    if (typeof init === 'function') {
+      this.initState = this.spec.model.createState(this.params, init(this.params));
+    } else {
+      const eq = this.spec.equilibrium?.(this.params) ?? 0;
+      this.initState = this.spec.model.createState(this.params, {
+        x0: eq + init.x0,
+        v0: init.v0,
+      });
+    }
+    this.activeBody = 0;
     if (preset.chips) {
       useSimStore.setState((s) => ({ chips: { ...s.chips, ...preset.chips } }));
     }
@@ -306,17 +331,26 @@ export class SimController<P> {
     this.syncStore();
   }
 
-  /** Edit the state while paused; the edit also becomes the new initial condition. */
-  setPausedState(x: number, v: number): void {
-    this.spec.model.setKinematic(this.state, x, v);
-    this.ic = { x0: x, v0: v };
+  /**
+   * Edit body `i` while paused; the paused state (positions and velocities of every body)
+   * becomes the new initial condition.
+   */
+  setPausedState(x: number, v: number, i = this.activeBody): void {
+    const k = this.spec.model;
+    k.setKinematic(this.state, x, v, i);
+    const init = k.createState(this.params, this.spec.defaultInit);
+    for (let b = 0; b < this.bodies; b++) {
+      k.setKinematic(init, k.getPos(this.state, b), k.getVel(this.state, b), b);
+    }
+    this.initState = init;
   }
 
-  beginHold(x: number): void {
+  beginHold(x: number, i = this.activeBody): void {
     this.held = true;
+    this.activeBody = i;
     if (this.running) {
       this.holdTarget = { x, v: 0 };
-      this.loop.hold(x, 0);
+      this.loop.hold(x, 0, i);
     }
   }
 
@@ -331,6 +365,10 @@ export class SimController<P> {
    * body and its trace never leave the scene. Within the track the motion is the model's.
    */
   private bounce(state: Float64Array): void {
+    if (this.scene.constrain) {
+      this.scene.constrain(state, this.loop.params);
+      return;
+    }
     const k = this.spec.model;
     const x = k.getPos(state);
     const c = this.scene.clampX(x, this.loop.params);
@@ -349,7 +387,8 @@ export class SimController<P> {
       t: this.loop.t,
       running: this.running,
       held: this.held,
-      v0: this.spec.model.getVel(s),
+      v0: this.spec.model.getVel(s, this.activeBody),
+      activeBody: this.activeBody,
       view: this.view,
       px: 1 / this.view.pxPerMeter,
       ppx: 1 / this.view.fitScale,
@@ -386,6 +425,7 @@ export class SimController<P> {
     this.changeParams(() => {
       (this.params as Record<string, number>)[key] = value;
     });
+    this.activeBody = Math.min(this.activeBody, this.bodies - 1);
     this.syncStore();
   }
 
@@ -428,7 +468,7 @@ export class SimController<P> {
     if (d === 0) return;
     const k = this.spec.model;
     k.setKinematic(this.state, k.getPos(this.state) + d, k.getVel(this.state));
-    this.ic = { ...this.ic, x0: this.ic.x0 + d };
+    k.setKinematic(this.initState, k.getPos(this.initState) + d, k.getVel(this.initState));
     if (this.history.has('x')) this.history.shift('x', d);
     if (this.holdTarget) this.holdTarget.x += d;
     if (this.loop.isHeld) this.loop.hold(k.getPos(this.state), k.getVel(this.state));
@@ -491,7 +531,9 @@ export class SimController<P> {
     const ticks = this.recorder ? Math.min(4, Math.max(1, Math.round(wall * 60))) : 0;
     const realDt = ticks ? ticks / 60 : Math.min(wall, 0.1);
     this.updatePerspective(realDt);
-    if (this.holdTarget && this.loop.isHeld) this.loop.hold(this.holdTarget.x, this.holdTarget.v);
+    if (this.holdTarget && this.loop.isHeld) {
+      this.loop.hold(this.holdTarget.x, this.holdTarget.v, this.loop.heldBody);
+    }
     if (ticks) for (let i = 0; i < ticks; i++) this.loop.advanceFrame(1 / 60);
     else this.loop.advance(realDt);
     const t0 = performance.now();
@@ -720,6 +762,15 @@ export class SimController<P> {
       frames: this.recorder?.frames ?? 0,
       canvas: this.canvas ? { width: this.canvas.width, height: this.canvas.height } : null,
       perf: { ...this.perf },
+      activeBody: this.activeBody,
+      bodies: Array.from({ length: this.bodies }, (_, i) => ({
+        x: k.getPos(s, i),
+        v: k.getVel(s, i),
+        page: this.pageCoords(
+          this.scene.bodyU?.(k.getPos(s, i), this.params, i) ?? k.getPos(s, i),
+          this.scene.bodyW(this.params, i),
+        ),
+      })),
     };
   }
 

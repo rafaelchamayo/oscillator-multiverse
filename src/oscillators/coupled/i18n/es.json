@@ -1,0 +1,73 @@
+{
+  "title": "Osciladores acoplados",
+  "short": "Acoplados",
+  "tagline": "Varias masas unidas por resortes: la energía viaja y aparecen los modos normales.",
+  "objects": {
+    "block1": {
+      "title": "Bloque 1",
+      "desc": "Su masa m₁ es su inercia. Los dos resortes que lo tocan tiran de él según cuánto se estiran; así se le pasa el movimiento a sus vecinos."
+    },
+    "block2": {
+      "title": "Bloque 2",
+      "desc": "Su masa m₂ es su inercia. Los dos resortes que lo tocan tiran de él según cuánto se estiran; así se le pasa el movimiento a sus vecinos."
+    },
+    "block3": {
+      "title": "Bloque 3",
+      "desc": "Su masa m₃ es su inercia. Los dos resortes que lo tocan tiran de él según cuánto se estiran; así se le pasa el movimiento a sus vecinos."
+    },
+    "block4": {
+      "title": "Bloque 4",
+      "desc": "Su masa m₄ es su inercia. Los dos resortes que lo tocan tiran de él según cuánto se estiran; así se le pasa el movimiento a sus vecinos."
+    },
+    "block5": {
+      "title": "Bloque 5",
+      "desc": "Su masa m₅ es su inercia. Los dos resortes que lo tocan tiran de él según cuánto se estiran; así se le pasa el movimiento a sus vecinos."
+    },
+    "spring1": {
+      "title": "Resorte 1",
+      "desc": "Constante k₁. Su fuerza depende de la diferencia de desplazamientos de sus extremos: es lo que acopla a los bloques."
+    },
+    "spring2": {
+      "title": "Resorte 2",
+      "desc": "Constante k₂. Su fuerza depende de la diferencia de desplazamientos de sus extremos: es lo que acopla a los bloques."
+    },
+    "spring3": {
+      "title": "Resorte 3",
+      "desc": "Constante k₃. Su fuerza depende de la diferencia de desplazamientos de sus extremos: es lo que acopla a los bloques."
+    },
+    "spring4": {
+      "title": "Resorte 4",
+      "desc": "Constante k₄. Su fuerza depende de la diferencia de desplazamientos de sus extremos: es lo que acopla a los bloques."
+    },
+    "spring5": {
+      "title": "Resorte 5",
+      "desc": "Constante k₅. Su fuerza depende de la diferencia de desplazamientos de sus extremos: es lo que acopla a los bloques."
+    },
+    "spring6": {
+      "title": "Resorte 6",
+      "desc": "Constante k₆. Su fuerza depende de la diferencia de desplazamientos de sus extremos: es lo que acopla a los bloques."
+    },
+    "wall": {
+      "title": "Paredes",
+      "desc": "Los extremos fijos de la cadena: los resortes de los bordes se anclan en ellas."
+    },
+    "velocity": {
+      "title": "Velocidad",
+      "desc": "Cada flecha muestra la velocidad de su bloque. En pausa, arrastra su punta para elegir v₀."
+    }
+  },
+  "params": {
+    "m1": "Masa 1",
+    "m2": "Masa 2",
+    "m3": "Masa 3",
+    "m4": "Masa 4",
+    "m5": "Masa 5",
+    "k1": "Constante del resorte 1",
+    "k2": "Constante del resorte 2",
+    "k3": "Constante del resorte 3",
+    "k4": "Constante del resorte 4",
+    "k5": "Constante del resorte 5",
+    "k6": "Constante del resorte 6"
+  },
+  "derived": "ω = {w} rad/s"
+}

@@ -1,0 +1,73 @@
+{
+  "title": "Coupled oscillators",
+  "short": "Coupled",
+  "tagline": "Several masses joined by springs: energy travels and normal modes appear.",
+  "objects": {
+    "block1": {
+      "title": "Block 1",
+      "desc": "Its mass m₁ is its inertia. The two springs touching it pull according to how much they stretch; that is how motion passes to its neighbours."
+    },
+    "block2": {
+      "title": "Block 2",
+      "desc": "Its mass m₂ is its inertia. The two springs touching it pull according to how much they stretch; that is how motion passes to its neighbours."
+    },
+    "block3": {
+      "title": "Block 3",
+      "desc": "Its mass m₃ is its inertia. The two springs touching it pull according to how much they stretch; that is how motion passes to its neighbours."
+    },
+    "block4": {
+      "title": "Block 4",
+      "desc": "Its mass m₄ is its inertia. The two springs touching it pull according to how much they stretch; that is how motion passes to its neighbours."
+    },
+    "block5": {
+      "title": "Block 5",
+      "desc": "Its mass m₅ is its inertia. The two springs touching it pull according to how much they stretch; that is how motion passes to its neighbours."
+    },
+    "spring1": {
+      "title": "Spring 1",
+      "desc": "Constant k₁. Its force depends on the difference between the displacements of its ends: it is what couples the blocks."
+    },
+    "spring2": {
+      "title": "Spring 2",
+      "desc": "Constant k₂. Its force depends on the difference between the displacements of its ends: it is what couples the blocks."
+    },
+    "spring3": {
+      "title": "Spring 3",
+      "desc": "Constant k₃. Its force depends on the difference between the displacements of its ends: it is what couples the blocks."
+    },
+    "spring4": {
+      "title": "Spring 4",
+      "desc": "Constant k₄. Its force depends on the difference between the displacements of its ends: it is what couples the blocks."
+    },
+    "spring5": {
+      "title": "Spring 5",
+      "desc": "Constant k₅. Its force depends on the difference between the displacements of its ends: it is what couples the blocks."
+    },
+    "spring6": {
+      "title": "Spring 6",
+      "desc": "Constant k₆. Its force depends on the difference between the displacements of its ends: it is what couples the blocks."
+    },
+    "wall": {
+      "title": "Walls",
+      "desc": "The fixed ends of the chain: the outer springs are anchored to them."
+    },
+    "velocity": {
+      "title": "Velocity",
+      "desc": "Each arrow shows its block's velocity. While paused, drag its tip to choose v₀."
+    }
+  },
+  "params": {
+    "m1": "Mass 1",
+    "m2": "Mass 2",
+    "m3": "Mass 3",
+    "m4": "Mass 4",
+    "m5": "Mass 5",
+    "k1": "Spring constant 1",
+    "k2": "Spring constant 2",
+    "k3": "Spring constant 3",
+    "k4": "Spring constant 4",
+    "k5": "Spring constant 5",
+    "k6": "Spring constant 6"
+  },
+  "derived": "ω = {w} rad/s"
+}

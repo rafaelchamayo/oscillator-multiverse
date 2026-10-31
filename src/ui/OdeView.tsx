@@ -64,7 +64,13 @@ export function OdeView({ sim }: Props) {
       el.style.fontSize = `${Math.max(MIN_FONT, ODE_FONT * k)}px`;
     };
     fit();
-    const ro = new ResizeObserver(fit);
+    // Only width changes matter; refitting changes the row's height, which must not loop.
+    let lastWidth = row.clientWidth;
+    const ro = new ResizeObserver(() => {
+      if (row.clientWidth === lastWidth) return;
+      lastWidth = row.clientWidth;
+      fit();
+    });
     ro.observe(row);
     return () => ro.disconnect();
   }, [html, badge?.key, hidden]);

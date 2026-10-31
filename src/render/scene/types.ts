@@ -14,6 +14,8 @@ export interface FrameInfo<S, P> {
   held: boolean;
   /** Initial velocity currently set (shown by the arrow while paused). */
   v0: number;
+  /** Body last touched by the hand (multi-body scenes show its x₀/v₀ tags). */
+  activeBody: number;
   view: ViewTransform;
   /** Meters per CSS pixel at the current zoom: UI-like sizes that stay constant on screen. */
   px: number;
@@ -40,6 +42,8 @@ export type HitRole = 'body' | 'velocityHandle' | 'object';
 export interface Hit {
   objectId: string;
   role: HitRole;
+  /** Body the hit belongs to (body and velocity handle hits in multi-body scenes; default 0). */
+  body?: number;
 }
 
 export interface Scene<S, P> {
@@ -60,9 +64,17 @@ export interface Scene<S, P> {
 
 /** Extra hooks for 1-DOF mechanical scenes with a draggable body and velocity arrow. */
 export interface MechanicalScene<P> extends Scene<Float64Array, P> {
-  clampX(x: number, params: P): number;
-  /** Cross-axis coordinate (w) of the body's center: where the hand grabs it. */
-  bodyW(params: P): number;
-  /** v₀ implied by dragging the arrow tip to scene coordinate `u`. */
-  velocityFromHandle(u: number, x: number, params: P): number;
+  /** Where body `i` may be dragged to (`state` gives its neighbours in multi-body scenes). */
+  clampX(x: number, params: P, i?: number, state?: Float64Array): number;
+  /** Scene u of body `i` at displacement x (default: u = x, the 1-DOF scenes). */
+  bodyU?(x: number, params: P, i: number): number;
+  /** Cross-axis coordinate (w) of a body's center: where the hand grabs it. */
+  bodyW(params: P, i?: number): number;
+  /** v₀ implied by dragging the arrow tip of body `i` to scene coordinate `u`. */
+  velocityFromHandle(u: number, x: number, params: P, i?: number): number;
+  /**
+   * Keeps the bodies inside the scene after every step (walls, collisions). Without it the
+   * controller bounces body 0 elastically off the `clampX` limits.
+   */
+  constrain?(state: Float64Array, params: P): void;
 }

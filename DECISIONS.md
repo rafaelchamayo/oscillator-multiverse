@@ -198,6 +198,22 @@ Minor, reversible decisions taken during implementation, and why.
   leaks < 1e-8 of E into the others and its period is within 0.1%; N = 2 matches the modal superposition to
   < 1e-6; E and every Eqₙ drift < 1e-5 over 100 slow periods; at the slider extremes.
 
+## Coupled oscillators — C2: multi-body runtime
+
+- **Body index**: `Kinematic` takes an optional body `i` (default 0) and `bodies(params)`; 1-DOF models ignore
+  it, `chainKinematic` reads [x₁…x₅, v₁…v₅]. Hits carry `body`, and the pointer drags, flings and sets v₀ on
+  that body (`SimController.activeBody`, the last one touched).
+- **Initial condition = state snapshot**: `initState` replaces {x₀, v₀}. Editing any body while paused copies
+  the positions and velocities of all bodies into a fresh `createState` (so non-kinematic state, like the
+  driven tab's work integrals, starts at 0 again). `ic` remains as a view of body 0.
+- **Holding one body of many**: the others keep integrating (pulled by the held one); the held body's x and v
+  are imposed after each step. A 1-DOF model is still not integrated while held, as before.
+- **Stops**: a scene may implement `constrain(state)`. The chain bounces elastically off the walls and resolves
+  block–block contact as an elastic collision (exchange of momentum for unequal masses), keeping every
+  spring ≥ 8 cm; dragging is limited by the neighbours the same way. Without it, body 0 bounces off `clampX`.
+- The coupled tab exists as a placeholder (walls, N blocks, springs, popovers, energy plot); scene polish,
+  N selector, matrix ODE and plots come in C3–C4.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by
