@@ -36,7 +36,9 @@ export class TimePlot implements Plot {
 
   draw(g: CanvasRenderingContext2D, width: number, height: number, ctx: PlotCtx): void {
     const h = ctx.history;
-    const shown = this.series.filter((s) => !s.chip || ctx.chips[s.chip]);
+    const shown = this.series.filter(
+      (s) => (!s.chip || ctx.chips[s.chip]) && (s.when?.(ctx.params) ?? true),
+    );
     if (shown.length === 0) return;
     if (h.length < 2) {
       drawIdle(g, width, height, ctx);

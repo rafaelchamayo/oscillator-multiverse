@@ -37,4 +37,6 @@ export interface SeriesDef {
   lane?: string;
   /** Drawn dashed (analytic references such as the steady state). */
   dash?: boolean;
+  /** Shown only while this holds (e.g. x₄ only when there are 4 bodies). */
+  when?(params: Record<string, number>): boolean;
 }

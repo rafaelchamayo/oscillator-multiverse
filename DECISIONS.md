@@ -235,6 +235,24 @@ Minor, reversible decisions taken during implementation, and why.
   springs split in half), so the bar's height is the total E.
 - Tooltip centering uses the `translate` property: the `rise` animation owns `transform`.
 
+## Coupled oscillators — C4: plots and presentation
+
+- **Per-body series**: `SeriesDef.when(params)` hides xᵢ, vᵢ, Eᵢ, qₙ, Eqₙ beyond n, so one panel
+  definition serves N = 2…5. Bodies keep their block color everywhere; normal modes get their own
+  pastel `modeColors` (dark panel only) so a mode never reads as a body.
+- **Panels**: motion (x and v lanes, one line per body), energy per mass (Eᵢ + E), normal coordinates
+  (qₙ, in m·√kg because Φ is M-normalized, and Eqₙ: flat lines, the proof that modes don't exchange
+  energy), mode shapes and configuration space x₁ vs x₂ (`PhasePlot`: a pure mode is a straight line,
+  a mix of two fills a Lissajous box).
+- **`ModeShapesPlot`**: one row per mode with the shape as stems from wall to wall, swinging as
+  cos(ωₙ t) at the simulation time (so each row moves at its own frequency, also when paused at t = 0),
+  its dashed envelope, ωₙ, and the current share of the energy Eqₙ / E from the latest sample.
+- **Matrix ODE on canvas**: `drawMath` lays out M, ẍ, K, x as columns of measured entries between
+  drawn parentheses (quadratic curves), with subscripts, faint structural zeros and the same
+  highlight as the interactive view.
+- **ODE pill geometry** (`odeCardGeometry`): starts at 20 px for matrices (27 otherwise), shrinks the
+  equation to fit between the clock and the energy bar, and its height sets the scene's top inset.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by

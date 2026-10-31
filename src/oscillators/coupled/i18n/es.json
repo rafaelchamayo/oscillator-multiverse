@@ -76,7 +76,10 @@
     "nonuniform": "Cadena no uniforme"
   },
   "chips": {
-    "traces": "Trazas x(t)"
+    "traces": "Trazas x(t)",
+    "modes": "Coord. normales",
+    "shapes": "Formas de modos",
+    "config": "x₁ vs x₂"
   },
   "presets": {
     "mode1": "Modo 1",
@@ -91,5 +94,11 @@
     "mode": "Arranca exactamente en el modo {n}: todas las masas oscilan a la misma frecuencia ω{n} = {w} rad/s y la forma no cambia, solo crece y decrece. Su perfil cambia de signo {nodes} veces.",
     "exchange": "Dos masas iguales unidas por un resorte débil. Empuja solo la primera: su energía pasa poco a poco a la segunda y vuelve, como un péndulo doble. Son pulsaciones entre los dos modos.",
     "pulse": "Solo el primer bloque desplazado. Es una mezcla de todos los modos: la perturbación viaja por la cadena, rebota en las paredes y la energía se reparte entre las masas."
+  },
+  "panels": {
+    "energy": "Energía por masa",
+    "modes": "Coordenadas normales",
+    "shapes": "Formas de los modos",
+    "config": "Espacio de configuración"
   }
 }

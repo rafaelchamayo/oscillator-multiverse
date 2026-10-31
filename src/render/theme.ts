@@ -49,6 +49,9 @@ export const series = {
 /** One color per body in multi-body tabs (blocks, paper traces, plots); readable on both themes. */
 export const bodyColors = ['#3B78FF', '#F08A24', '#17A673', '#D63A9A', '#8B5CF6'] as const;
 
+/** One color per normal mode (dark plot panel only): pastel, so they never read as a body. */
+export const modeColors = ['#7DD3FC', '#FCA5A5', '#FDE68A', '#86EFAC', '#D8B4FE'] as const;
+
 /** Force vectors (on paper and in the force plot): one hue per physical cause. */
 export const forces = {
   spring: '#12A39D',

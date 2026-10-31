@@ -34,7 +34,8 @@ size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on s
 
 Plots: a plugin's `sim` declares `historyKeys`, `chips` and `panels` (each panel = a `Plot` from
 `src/render/plots/`, shown while any of its chips is on). `SimController` samples a `History` on every step and
-draws registered plot canvases each frame. Gravity changes go through `spec.setGravity` + `spec.equilibrium`.
+draws registered plot canvases each frame. A `SeriesDef.when(params)` hides series that do
+not apply (e.g. x₄ with three bodies). Gravity changes go through `spec.setGravity` + `spec.equilibrium`.
 
 ## Conventions
 
@@ -84,4 +85,4 @@ Coupled oscillators tab (N = 2…5 masses between two walls; plan in DECISIONS.m
 - [x] C1 — Physics (chain model, Jacobi normal modes, modal coordinates, matrix ODE, numerical tests)
 - [x] C2 — Multi-body runtime (body index in Kinematic/hold/hit, initial state snapshot, collisions)
 - [x] C3 — Scene and UI (N selector, popovers, matrix ODE, mode presets, N traces, energy bar)
-- [ ] C4 — Plots and presentation (energy per mass, normal coordinates, mode shapes, configuration space)
+- [x] C4 — Plots and presentation (energy per mass, normal coordinates, mode shapes, configuration space)

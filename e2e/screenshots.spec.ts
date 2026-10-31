@@ -308,3 +308,35 @@ test('screenshot coupled preset explanation + narrow', async ({ page }) => {
   await page.waitForTimeout(300);
   await page.screenshot({ path: 'e2e/screenshots/coupled-narrow-preset.png' });
 });
+
+test('screenshot coupled plots: motion, normal coordinates, mode shapes, configuration', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await open(page, '/#/coupled', 'es');
+  for (const id of ['v', 'modes', 'shapes', 'config']) await page.getByTestId(`chip-${id}`).click();
+  // Mostly mode 1 with some mode 2: x₁ vs x₂ fills a Lissajous box, q₁ and q₂ stay pure.
+  await sim(
+    page,
+    `const k = s.spec.model;
+     k.setKinematic(s.state, 0.3, 0, 0);
+     k.setKinematic(s.state, 0.1, 0, 1);
+     k.setKinematic(s.state, -0.05, 0, 2);
+     s.setPausedState(0.3, 0, 0);
+     s.play();
+     for (let i = 0; i < 600; i++) s.loop.advanceFrame();`,
+  );
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'e2e/screenshots/coupled-plots.png' });
+});
+
+test('screenshot presentation coupled N = 5 (matrix ODE on canvas)', async ({ page }) => {
+  await open(page, '/#/coupled', 'es');
+  for (let i = 0; i < 2; i++) await page.getByTestId('count-plus').click();
+  await page.getByTestId('preset-mode3').click();
+  await page.getByTestId('chip-shapes').click();
+  await sim(page, 'for (let i = 0; i < 240; i++) s.loop.advanceFrame();');
+  await page.keyboard.press('p');
+  await page.waitForTimeout(800);
+  await saveCanvas(page, 'e2e/screenshots/present-coupled-canvas.png');
+});

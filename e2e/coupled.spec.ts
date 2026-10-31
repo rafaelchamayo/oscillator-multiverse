@@ -227,3 +227,27 @@ test('hovering a spring highlights its entries of K; equalize sets every mass', 
   expect([p.m1, p.m2, p.m3]).toEqual([2.5, 2.5, 2.5]);
   await expect(page.getByTestId('regime')).toHaveText(/uniforme|Uniform/);
 });
+
+test('each plot chip shows its panel', async ({ page }) => {
+  for (const id of ['modes', 'shapes', 'config']) {
+    await expect(page.getByTestId(`panel-${id}`)).toHaveCount(0);
+    await page.getByTestId(`chip-${id}`).click();
+    await expect(page.getByTestId(`panel-${id}`)).toBeVisible();
+  }
+  await expect(page.getByTestId('panel-motion')).toBeVisible();
+  await expect(page.getByTestId('panel-energy')).toBeVisible();
+});
+
+test('presentation with N = 5: the matrix ODE pill pushes the scene down', async ({ page }) => {
+  const inset = () => run<number>(page, 'return s.view.insetTop;');
+  await page.keyboard.press('p');
+  await expect(page.getByTestId('presentation')).toBeVisible();
+  await page.waitForTimeout(100);
+  const three = await inset();
+  await run(page, 's.setCount(5);');
+  await page.waitForTimeout(100);
+  const five = await inset();
+  // Default pill: 24 + 62 + 14 = 100. A 3 × 3 and a 5 × 5 matrix are taller, and 5 more than 3.
+  expect(three).toBeGreaterThan(100);
+  expect(five).toBeGreaterThan(three);
+});

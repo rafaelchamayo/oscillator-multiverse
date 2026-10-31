@@ -5,7 +5,7 @@ import type { Plot, PlotCtx } from '../render/plots/types';
 import { roundRectPath } from '../render/scene/draw';
 import { colors, fonts, inkWidth, series as S } from '../render/theme';
 import type { PresentOptions } from '../state/simStore';
-import { drawEquation, measureEquation } from './drawMath';
+import { drawEquation, equationHeight, measureEquation } from './drawMath';
 
 /**
  * Presentation stage: a 1920×1080 canvas laid out in a 1280×720 logical space (scale 1.5), so
@@ -15,9 +15,12 @@ export const PRESENT = { width: 1280, height: 720, scale: 1.5 } as const;
 
 const MARGIN = 24;
 const COLUMN_W = 420;
-const ODE_INSET = 100;
+/** Gap between the ODE pill and the scene below it. */
+const ODE_GAP = 14;
 /** Left edge the ODE pill keeps free for the scene's clock ("t = 12.34 s"). */
 const CLOCK_CLEAR = 150;
+/** Right edge the ODE pill keeps free for the scene's energy bar. */
+const BAR_CLEAR = 80;
 
 export interface PresentLayout {
   /** Scene region: [0, sceneW] × [0, height]. */
@@ -29,10 +32,19 @@ export interface PresentLayout {
   cards: { panel: PanelDef; x: number; y: number; w: number; h: number }[];
 }
 
-export function presentLayout(panels: PanelDef[], opts: PresentOptions): PresentLayout {
-  const insetTop = opts.ode ? ODE_INSET : MARGIN;
+/**
+ * `odeHeight(sceneW)` is the ODE pill's height for that scene width (a matrix ODE is taller);
+ * the scene starts below it.
+ */
+export function presentLayout(
+  panels: PanelDef[],
+  opts: PresentOptions,
+  odeHeight: (sceneW: number) => number = () => ODE_MIN_H,
+): PresentLayout {
+  const inset = (sceneW: number) => (opts.ode ? MARGIN + odeHeight(sceneW) + ODE_GAP : MARGIN);
   if (panels.length === 0) {
-    return { sceneW: PRESENT.width, insetTop, insetBottom: MARGIN, column: null, cards: [] };
+    const sceneW = PRESENT.width;
+    return { sceneW, insetTop: inset(sceneW), insetBottom: MARGIN, column: null, cards: [] };
   }
   const column = {
     x: PRESENT.width - MARGIN - COLUMN_W,
@@ -51,7 +63,8 @@ export function presentLayout(panels: PanelDef[], opts: PresentOptions): Present
     y += h + gap;
     return card;
   });
-  return { sceneW: column.x - 8, insetTop, insetBottom: MARGIN, column, cards };
+  const sceneW = column.x - 8;
+  return { sceneW, insetTop: inset(sceneW), insetBottom: MARGIN, column, cards };
 }
 
 /** Paper background over the whole canvas (device pixels already scaled by PRESENT.scale). */
@@ -82,37 +95,66 @@ export interface OdeCard {
   lit: string[];
 }
 
-/** The ODE pill centered at the top of the scene region, like the interactive one. */
-export function drawOdeCard(g: CanvasRenderingContext2D, card: OdeCard, centerX: number): void {
-  const size = 27;
-  const eqW = measureEquation(g, card.eq, size);
+const ODE_SIZE = 27;
+/** Matrix entries start smaller: an N × N matrix is wide and tall. */
+const MATRIX_SIZE = 20;
+const ODE_PAD_X = 30;
+const ODE_PAD_Y = 12;
+const ODE_MIN_H = 62;
+const BADGE_GAP = 18;
+
+/**
+ * Size and place of the ODE pill: centered over the scene but clear of the clock (left) and the
+ * energy bar (right); the equation shrinks when it would not fit between them.
+ */
+export function odeCardGeometry(
+  g: CanvasRenderingContext2D,
+  card: OdeCard,
+  centerX: number,
+  sceneW: number,
+): { x: number; y: number; w: number; h: number; size: number; badgeW: number } {
+  const base = card.eq.matrix ? MATRIX_SIZE : ODE_SIZE;
   g.font = `600 14px ${fonts.ui}`;
   const badgeW = card.badge ? g.measureText(card.badge.text).width + 24 : 0;
-  const padX = 30;
-  const w = eqW + (card.badge ? badgeW + 18 : 0) + 2 * padX;
-  const h = 62;
-  // Centered, but clear of the clock in the top-left corner.
-  const x = Math.max(centerX - w / 2, CLOCK_CLEAR);
-  const y = MARGIN;
+  const fixed = 2 * ODE_PAD_X + (card.badge ? badgeW + BADGE_GAP : 0);
+  const avail = sceneW - CLOCK_CLEAR - BAR_CLEAR;
+  const natural = measureEquation(g, card.eq, base);
+  const size = natural + fixed > avail ? (base * Math.max(avail - fixed, 0)) / natural : base;
+  const w = measureEquation(g, card.eq, size) + fixed;
+  const h = Math.max(ODE_MIN_H, equationHeight(card.eq, size) + 2 * ODE_PAD_Y);
+  const x = Math.max(CLOCK_CLEAR, Math.min(centerX - w / 2, sceneW - BAR_CLEAR - w));
+  return { x, y: MARGIN, w, h, size, badgeW };
+}
+
+/** The ODE pill at the top of the scene region, like the interactive one. */
+export function drawOdeCard(
+  g: CanvasRenderingContext2D,
+  card: OdeCard,
+  centerX: number,
+  sceneW: number,
+): void {
+  const { x, y, w, h, size, badgeW } = odeCardGeometry(g, card, centerX, sceneW);
+  const eqW = w - 2 * ODE_PAD_X - (card.badge ? badgeW + BADGE_GAP : 0);
+  const radius = Math.min(h / 2, 40);
 
   // Pill with ink outline and the hard drop shadow of the sketchbook look.
-  roundRectPath(g, x, y + 4, w, h, h / 2);
+  roundRectPath(g, x, y + 4, w, h, radius);
   g.fillStyle = 'rgba(22,24,29,0.10)';
   g.fill();
-  roundRectPath(g, x, y, w, h, h / 2);
+  roundRectPath(g, x, y, w, h, radius);
   g.fillStyle = colors.surface;
   g.fill();
   g.lineWidth = inkWidth;
   g.strokeStyle = colors.border;
   g.stroke();
 
-  drawEquation(g, card.eq, x + padX, y + h / 2 + size * 0.34, size, colors.text, {
+  drawEquation(g, card.eq, x + ODE_PAD_X, y + h / 2 + size * 0.34, size, colors.text, {
     terms: card.lit,
     color: colors.highlight,
   });
 
   if (card.badge) {
-    const bx = x + padX + eqW + 18;
+    const bx = x + ODE_PAD_X + eqW + BADGE_GAP;
     const bh = 26;
     const by = y + (h - bh) / 2;
     const c = BADGE_COLOR[card.badge.tone];

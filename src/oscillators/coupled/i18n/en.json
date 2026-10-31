@@ -76,7 +76,10 @@
     "nonuniform": "Non-uniform chain"
   },
   "chips": {
-    "traces": "x(t) traces"
+    "traces": "Traces x(t)",
+    "modes": "Normal coords.",
+    "shapes": "Mode shapes",
+    "config": "x₁ vs x₂"
   },
   "presets": {
     "mode1": "Mode 1",
@@ -91,5 +94,11 @@
     "mode": "Starts exactly in mode {n}: every mass oscillates at the same frequency ω{n} = {w} rad/s and the shape never changes, it only grows and shrinks. Its profile changes sign {nodes} times.",
     "exchange": "Two equal masses joined by a weak spring. Push only the first: its energy slowly passes to the second and comes back, like a double pendulum. These are beats between the two modes.",
     "pulse": "Only the first block displaced. It is a mix of every mode: the disturbance travels along the chain, bounces off the walls and the energy spreads among the masses."
+  },
+  "panels": {
+    "energy": "Energy per mass",
+    "modes": "Normal coordinates",
+    "shapes": "Mode shapes",
+    "config": "Configuration space"
   }
 }

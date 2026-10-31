@@ -7,6 +7,8 @@ import type { MechanicalSimSpec, PanelDef, SimExtras } from '../oscillators/type
 import {
   drawBackground,
   drawOdeCard,
+  odeCardGeometry,
+  type OdeCard,
   drawPlotColumn,
   PRESENT,
   presentLayout,
@@ -581,12 +583,26 @@ export class SimController<P> {
   private layoutPresent() {
     const ui = useSimStore.getState();
     const panels = this.spec.panels.filter((p) => p.chips.some((c) => ui.chips[c]));
-    const L = presentLayout(panels, ui.present);
+    const g = this.g;
+    const L = presentLayout(panels, ui.present, (sceneW) =>
+      g ? odeCardGeometry(g, this.odeCard(), sceneW / 2, sceneW).h : 62,
+    );
     this.view.width = L.sceneW;
     this.view.height = PRESENT.height;
     this.view.insetTop = L.insetTop;
     this.view.insetBottom = L.insetBottom;
     return L;
+  }
+
+  /** The ODE pill's content: equation, badge and the hovered object's terms. */
+  private odeCard(): OdeCard {
+    const badge = this.spec.badge?.(this.params as Record<string, number>) ?? null;
+    const tr = this.translator(useUiStore.getState().lang);
+    return {
+      eq: this.spec.model.latexODE(this.params),
+      badge: badge && { text: tr(badge.key), tone: badge.tone },
+      lit: this.spec.objects.find((o) => o.id === this.highlightId)?.terms ?? [],
+    };
   }
 
   private presentPlot(panel: PanelDef): Plot {
@@ -645,19 +661,7 @@ export class SimController<P> {
     this.scene.drawOverlay?.(g, f);
     g.restore();
 
-    if (ui.present.ode) {
-      const params = this.params as Record<string, number>;
-      const badge = this.spec.badge?.(params) ?? null;
-      drawOdeCard(
-        g,
-        {
-          eq: this.spec.model.latexODE(this.params),
-          badge: badge && { text: f.tr(badge.key), tone: badge.tone },
-          lit: this.spec.objects.find((o) => o.id === this.highlightId)?.terms ?? [],
-        },
-        L.sceneW / 2,
-      );
-    }
+    if (ui.present.ode) drawOdeCard(g, this.odeCard(), L.sceneW / 2, L.sceneW);
 
     drawPlotColumn(
       g,
