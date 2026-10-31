@@ -75,3 +75,10 @@ The SHO (`src/oscillators/sho/`) is the worked example.
 - [x] Phase 4 — Hover, popovers, ODE (object popovers with the only sliders, live KaTeX ODE, term↔object highlight)
 - [x] Phase 5 — Damped driven oscillator (dashpot, crank motor, force vectors, regime badge, steady/transient, resonance sweep, presets)
 - [x] Phase 6 — Presentation mode and polish (P: 1920×1080 canvas with options, G: frame-locked WebM recording, `?` shortcuts help)
+
+Coupled oscillators tab (N = 2…5 masses between two walls; plan in DECISIONS.md):
+
+- [x] C1 — Physics (chain model, Jacobi normal modes, modal coordinates, matrix ODE, numerical tests)
+- [ ] C2 — Multi-body runtime (body index in Kinematic/hold/hit, initial state snapshot, collisions)
+- [ ] C3 — Scene and UI (N selector, popovers, matrix ODE, mode presets, N traces, energy bar)
+- [ ] C4 — Plots and presentation (energy per mass, normal coordinates, mode shapes, configuration space)

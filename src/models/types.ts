@@ -32,6 +32,19 @@ export interface OdeTerm {
 export interface OdeEquation {
   lhs: OdeTerm[];
   rhs: OdeTerm[];
+  /** Matrix form M ẍ + K x = 0 for systems of N bodies (lhs/rhs then hold its symbolic form). */
+  matrix?: MatrixOde;
+}
+
+/** One entry of a matrix in the ODE; `ids` are the terms (objects) that contribute to it. */
+export interface MatrixEntry {
+  latex: string;
+  ids: string[];
+}
+
+export interface MatrixOde {
+  M: MatrixEntry[][];
+  K: MatrixEntry[][];
 }
 
 /** Capability of 1-DOF mechanical models: the hand can impose position and velocity. */

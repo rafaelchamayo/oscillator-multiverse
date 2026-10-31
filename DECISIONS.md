@@ -181,6 +181,23 @@ Minor, reversible decisions taken during implementation, and why.
 - **Toolbar**: container queries on the stage shrink it at 760 and 560 px of stage width.
 - Presets explain their scenario on hover/focus (`descKey`). The "wheee!" exclamation is gone.
 
+## Coupled oscillators — C1: physics
+
+- **Chain**: wall —k₁— m₁ —k₂— … mₙ —kₙ₊₁— wall, 2 ≤ n ≤ 5, every mᵢ and kⱼ its own parameter
+  (`n, m1…m5, k1…k6`). xᵢ is measured from mass i's equilibrium, so M ẍ + K x = 0 with M = diag(mᵢ) and K
+  tridiagonal. The state always holds 5 bodies ([x₁…x₅, v₁…v₅]); bodies beyond n stay at rest, so changing n
+  needs no reallocation.
+- **Normal modes**: Jacobi eigen-decomposition (`src/core/math/eigen.ts`) of M^{-1/2} K M^{-1/2}; shapes are
+  M-normalized (Φᵀ M Φ = I) with the first nonzero component positive. Cached by comparing the 12 params
+  (no allocation per step). Normal coordinates qₙ = φₙᵀ M x and Eqₙ = ½(q̇ₙ² + ωₙ² qₙ²); ΣEqₙ = E.
+- **Energy per mass**: Eᵢ = Kᵢ + ½ of each spring shared with a neighbour + all of a wall spring, so ΣEᵢ = E
+  exactly. It is a convention (spring energy is not located at a mass), stated in the UI.
+- **ODE**: `OdeEquation.matrix` holds M and K entry by entry, each tagged with the objects that contribute
+  (block i → `m{i}`, spring j → `k{j}`), for the matrix display and its highlight.
+- Tests: Φᵀ M Φ = I and Φᵀ K Φ = diag(ω²) < 1e-10; uniform chain ωₙ = 2ω₀ sin(nπ/2(N+1)) < 1e-9; a pure mode
+  leaks < 1e-8 of E into the others and its period is within 0.1%; N = 2 matches the modal superposition to
+  < 1e-6; E and every Eqₙ drift < 1e-5 over 100 slow periods; at the slider extremes.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by
