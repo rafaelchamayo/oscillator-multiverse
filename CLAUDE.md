@@ -86,3 +86,10 @@ Coupled oscillators tab (N = 2…5 masses between two walls; plan in DECISIONS.m
 - [x] C2 — Multi-body runtime (body index in Kinematic/hold/hit, initial state snapshot, collisions)
 - [x] C3 — Scene and UI (N selector, popovers, matrix ODE, mode presets, N traces, energy bar)
 - [x] C4 — Plots and presentation (energy per mass, normal coordinates, mode shapes, configuration space)
+
+Quantum harmonic oscillator 1D tab (superpositions of eigenstates, natural units ħ = m = ω = 1; plan in DECISIONS.md):
+
+- [x] Q1 — Physics (Hermite basis, exact evolution, coherent/cat states, ladder observables, Wigner function, tests)
+- [ ] Q2 — Runtime + placeholder (custom drag handles, `editState`, `PlotCtx.state`, minimal tab)
+- [ ] Q3 — Scene and interaction (levels, domain coloring, phasor wheels, packet fling, classical overlay, carpet, presets)
+- [ ] Q4 — Plots and presentation (spectrum, ⟨x⟩/⟨p⟩, uncertainty, phase plot, Wigner, canvas Schrödinger)

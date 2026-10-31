@@ -253,6 +253,35 @@ Minor, reversible decisions taken during implementation, and why.
 - **ODE pill geometry** (`odeCardGeometry`): starts at 20 px for matrices (27 otherwise), shrinks the
   equation to fit between the clock and the energy bar, and its height sets the scene's top inset.
 
+## Quantum harmonic oscillator — Q1: physics
+
+- **Units**: ħ = m = ω = 1 (owner's choice). x in √(ħ/mω), E in ħω, t in 1/ω, so Eₙ = n + ½ and every
+  state repeats after t = 2π (global phase −1). The tab has no physical parameters.
+- **State**: Float64Array [Re c₀…c₄₀, Im c₀…c₄₀], always normalized. `step` is the exact evolution
+  cₙ ← cₙ e^{−iEₙdt} (no integrator, no truncation error; only round-off, < 1e-9 in 10⁶ steps).
+- **Basis**: Hermite functions by the normalized three-term recurrence (no Hₙ, no n!, no overflow), on a
+  grid x ∈ [−12, 12] with Δx = 0.02 (1201 points). It is wide enough for ψ₄₀ (turning point 9). N_MAX = 40,
+  so a coherent state of radius √(⟨x⟩² + ⟨p⟩²) ≤ R_MAX = 4.8 loses < 1e-10 of its norm.
+- **The packet as a body**: the model is `Kinematic`, with getPos = ⟨x⟩ and getVel = ⟨p⟩, and
+  `setKinematic(x, v)` writes the coherent state α = (x + iv)/√2. Drag, fling, grab and the v₀ arrow of
+  the mechanical runtime then work as is, and the packet moves like the classical block (Ehrenfest).
+- **Observables by ladder operators**, in O(N), without the grid:
+  - ⟨x⟩ = √2 Re⟨a⟩, ⟨p⟩ = √2 Im⟨a⟩;
+  - ⟨x²⟩ = Re⟨a²⟩ + ⟨N⟩ + ½ and ⟨p²⟩ = −Re⟨a²⟩ + ⟨N⟩ + ½;
+  - K = ⟨p²⟩/2, U = ⟨x²⟩/2, E = ⟨N⟩ + ½, plus Pₙ = |cₙ|².
+  - They are checked against the moments of |ψ|² on the grid.
+- **Editing a coefficient** (`setCoefficient`) sets |cₙ| and arg cₙ and rescales the rest to keep the norm.
+  A lone coefficient keeps |cₙ| = 1: the normalization is honest.
+- **Wigner function** by its definition, (1/π)∫ψ*(x+y)ψ(x−y)e^{2ipy}dy, on the position grid itself (so
+  x ± y are grid points), 121² samples over ±6. This avoids a Laguerre series with N² terms. The HO only
+  rotates W clockwise by t, so it is computed once per edit and the plot will rotate the image.
+- **Tests**:
+  - the basis is orthonormal (< 1e-10) and the eigen-equation holds (< 1e-10);
+  - the norm is kept, the 2π revival holds, eigenstates are stationary, Ehrenfest holds;
+  - a coherent state follows (x₀cos t + p₀sin t, −x₀sin t + p₀cos t) with Δx = Δp = 1/√2 (< 1e-9);
+  - ∫W = 1, the ground state has the analytic W, W₁(0,0) = −1/π, a cat state has W < 0, and W rotates
+    rigidly.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by
