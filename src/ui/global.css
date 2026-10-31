@@ -726,10 +726,10 @@ button {
 }
 
 .presets {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
 }
 
 .presets__row {
@@ -739,8 +739,16 @@ button {
   gap: 6px;
 }
 
+/* Out of flow: showing it must not change the measured height of the top overlays. */
 .presets__tip {
-  max-width: 440px;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  /* `translate`, not `transform`: the rise animation owns transform. */
+  translate: -50% 0;
+  z-index: 3;
+  width: max-content;
+  max-width: min(440px, 90cqi);
   padding: 10px 14px;
   border-radius: var(--r-md);
   background: var(--c-surface);
@@ -1133,4 +1141,79 @@ kbd {
     padding: 0 9px;
     font-size: 11px;
   }
+}
+
+/* Number of bodies (coupled tab) */
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.count__label {
+  color: var(--c-text-muted);
+  margin-right: 2px;
+}
+
+.count__btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: 700 14px/1 var(--f-ui);
+  cursor: pointer;
+}
+
+.count__btn:hover:not(:disabled) {
+  background: var(--c-surface-raised);
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+
+.count__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.count__value {
+  min-width: 14px;
+  text-align: center;
+  font-family: var(--f-mono);
+  font-size: 14px;
+}
+
+.param__equalize {
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--c-border-soft);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.param__equalize:hover:not(:disabled) {
+  border-color: var(--c-primary);
+  background: var(--c-surface-raised);
+}
+
+.param__equalize:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Matrix form of the ODE: zero entries recede. */
+.ode .term-zero {
+  color: var(--c-text-muted);
+  opacity: 0.55;
 }

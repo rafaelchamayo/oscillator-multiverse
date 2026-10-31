@@ -19,6 +19,8 @@ export interface BlockDrawInput {
   /** Serious mode: no squash & stretch. */
   serious: boolean;
   glow: boolean;
+  /** Tints the face (tells bodies apart in multi-body tabs). */
+  tint?: string;
 }
 
 /**
@@ -100,6 +102,10 @@ export class MetalBlock {
     faceGrad.addColorStop(1, '#C3C7CE');
     g.fillStyle = faceGrad;
     g.fillRect(-ih, -ih, 2 * ih, 2 * ih);
+    if (d.tint) {
+      g.fillStyle = alpha(d.tint, 0.42);
+      g.fillRect(-ih, -ih, 2 * ih, 2 * ih);
+    }
 
     // Brushed hatching on the lower-right of the face.
     g.save();

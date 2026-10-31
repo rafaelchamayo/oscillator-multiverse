@@ -279,12 +279,32 @@ test('screenshot sho energy bar (full at start) + bounce off the wall', async ({
   await page.screenshot({ path: 'e2e/screenshots/sho-bounce.png' });
 });
 
-test('screenshot coupled placeholder (3 blocks, running + paused tag)', async ({ page }) => {
+test('screenshot coupled N = 2 exchange + N = 5 mode 2 + highlight', async ({ page }) => {
   await open(page, '/#/coupled', 'es');
-  await sim(page, 's.play(); for (let i = 0; i < 50; i++) s.loop.advanceFrame();');
+  await page.getByTestId('preset-exchange').click();
+  await sim(page, 'for (let i = 0; i < 480; i++) s.loop.advanceFrame();');
   await page.waitForTimeout(300);
-  await page.screenshot({ path: 'e2e/screenshots/coupled-running.png' });
-  await sim(page, 's.pause(); s.activeBody = 1; s.setPausedState(-0.15, 1.2, 1);');
+  await page.screenshot({ path: 'e2e/screenshots/coupled-exchange.png' });
+
+  for (let i = 0; i < 3; i++) await page.getByTestId('count-plus').click();
+  await page.getByTestId('preset-mode2').click();
+  await sim(page, 'for (let i = 0; i < 300; i++) s.loop.advanceFrame();');
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: 'e2e/screenshots/coupled-n5-mode2.png' });
+
+  await sim(page, 's.pause();');
+  const d = (await sim(page, 'return s.debug();')) as {
+    bodies: { page: { x: number; y: number } }[];
+  };
+  await page.mouse.move((d.bodies[2]!.page.x + d.bodies[3]!.page.x) / 2, d.bodies[2]!.page.y);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: 'e2e/screenshots/coupled-spring-highlight.png' });
+});
+
+test('screenshot coupled preset explanation + narrow', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 720 });
+  await open(page, '/#/coupled', 'es');
+  await page.getByTestId('preset-mode3').hover();
   await page.waitForTimeout(300);
-  await page.screenshot({ path: 'e2e/screenshots/coupled-paused.png' });
+  await page.screenshot({ path: 'e2e/screenshots/coupled-narrow-preset.png' });
 });

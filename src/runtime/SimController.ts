@@ -94,6 +94,8 @@ export class SimController<P> {
   private angleFrom = 0;
   private angleTo = 0;
   private angleT = 1;
+  /** Height of the stage's top overlays, once measured (see setTopInset). */
+  private topInset: number | null = null;
   /** g last applied to the params (NaN before the first application). */
   private gravity = NaN;
 
@@ -116,9 +118,10 @@ export class SimController<P> {
       params: { ...spec.defaultParams },
       state: spec.model.cloneState(this.initState),
       onStep: ({ t, state, manual }) => {
-        if (!manual) this.bounce(state);
+        // A held 1-DOF body is already clamped; with several, the free ones still collide.
+        if (!manual || this.bodies > 1) this.bounce(state);
         spec.model.observables(state, this.loop.params, t, this.stepObs);
-        if (this.history.offer(t, this.stepObs, manual)) {
+        if (this.history.offer(t, this.stepObs, manual ? this.loop.heldBody + 1 : 0)) {
           this.extras?.onSample?.(
             t,
             this.stepObs,
@@ -420,6 +423,33 @@ export class SimController<P> {
     return this.hoverId ?? this.termHoverId ?? this.popoverId;
   }
 
+  /** Sets several parameters to one value (the popovers' "equalize" button). */
+  setParams(keys: string[], value: number): void {
+    this.changeParams(() => {
+      for (const key of keys) (this.params as Record<string, number>)[key] = value;
+    });
+    this.syncStore();
+  }
+
+  /** Changes the number of bodies (`spec.countParam`) and restarts from its initial condition. */
+  setCount(n: number): void {
+    const c = this.spec.countParam;
+    if (!c) return;
+    const value = Math.min(c.max, Math.max(c.min, Math.round(n)));
+    const params = this.params as Record<string, number>;
+    if (params[c.key] === value) return;
+    params[c.key] = value;
+    this.initState = this.spec.model.createState(this.params, c.init(this.params));
+    this.activeBody = 0;
+    this.reset();
+  }
+
+  /** Room taken by the overlays at the top of the stage (ODE, presets), measured by the UI. */
+  setTopInset(px: number): void {
+    this.topInset = px;
+    if (!this.presenting) this.view.insetTop = px;
+  }
+
   /** Sets a model parameter from a slider, keeping the motion as seen (see applyGravity). */
   setParam(key: string, value: number): void {
     this.changeParams(() => {
@@ -512,8 +542,8 @@ export class SimController<P> {
     this.view.width = rect.width;
     this.view.height = rect.height;
     this.view.insetBottom = SimController.TOOLBAR_INSET;
-    // ODE card on top, plus the presets row when there is one.
-    this.view.insetTop = this.spec.presets ? 112 : 70;
+    // ODE card on top, plus the presets row when there is one (until the UI measures them).
+    this.view.insetTop = this.topInset ?? (this.spec.presets ? 112 : 70);
     this.view.fitSmooth(this.scene.bounds(this.frameInfo(0)), 0, true);
   }
 

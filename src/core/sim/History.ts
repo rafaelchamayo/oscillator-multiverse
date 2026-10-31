@@ -2,7 +2,8 @@ import { RingBuffer } from './RingBuffer';
 
 /**
  * Time series of selected observables, sampled every `every` simulation steps.
- * Index 0 is the oldest sample. `manual` marks samples taken while the hand held the body.
+ * Index 0 is the oldest sample. `manual` marks samples taken while the hand held a body: it
+ * stores the held body + 1 (0 when free), so `> 0` means "held".
  */
 export class History {
   readonly t: RingBuffer;
@@ -25,12 +26,12 @@ export class History {
   }
 
   /** Offer one simulation step; stored only every `every` steps (or when `force`). */
-  offer(t: number, obs: Record<string, number>, manual: boolean, force = false): boolean {
+  offer(t: number, obs: Record<string, number>, manual: boolean | number, force = false): boolean {
     this.counter++;
     if (!force && this.counter < this.every) return false;
     this.counter = 0;
     this.t.push(t);
-    this.manual.push(manual ? 1 : 0);
+    this.manual.push(typeof manual === 'number' ? manual : manual ? 1 : 0);
     for (const [k, rb] of this.series) rb.push(obs[k] ?? NaN);
     return true;
   }

@@ -83,7 +83,8 @@
     "show": "Mostrar la ecuación (E)"
   },
   "popover": {
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "equalize": "Igualar todos a {value}"
   },
   "presets": {
     "label": "Configuraciones"

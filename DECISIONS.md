@@ -214,6 +214,27 @@ Minor, reversible decisions taken during implementation, and why.
 - The coupled tab exists as a placeholder (walls, N blocks, springs, popovers, energy plot); scene polish,
   N selector, matrix ODE and plots come in C3–C4.
 
+## Coupled oscillators — C3: scene and UI
+
+- **N selector**: a spec may declare `countParam`; `CountStepper` (in `.stage-top`) changes `n` through
+  `SimController.setCount`, which pauses, resets t = 0 and starts from `countParam.init` (the pulse: only x₁
+  displaced). Mode presets with index ≥ n are hidden (`PresetDef.visible`).
+- **Matrix ODE**: `OdeEquation.matrix` renders as KaTeX `pmatrix` (M ẍ + K x = 0). Each entry is wrapped
+  with the ids of every term in it, so hovering spring j lights its 2–4 entries of K and block i lights
+  mᵢ and xᵢ; zero entries are dimmed. The pill scales by width and is capped at 150 px tall.
+- **Equalize**: a slider with `ParamDef.group` shows "Set all to …", which writes the whole group with
+  `setParams` (one history reset). The badge says whether the chain is uniform.
+- **Preset explanations with numbers**: `PresetDef.descVars(params)` interpolates the live ωₙ and the
+  number of sign changes into the tooltip, so it stays true after editing m or k.
+- **Measured top inset**: SimStage measures `.stage-top` (ODE + stepper + presets) and the view fits the
+  scene below it, instead of a fixed 70/112 px guess.
+- **One paper, N pens**: `PaperOptions.traces` draws each body's x(t) at its rest position in its
+  `bodyColors` color; a stretch is "hand-driven" only for the body that was held (History stores held
+  body + 1). Blocks are tinted with the same color.
+- **Energy bar**: stacked segments Eᵢ (per-mass energy, with wall springs owned by their mass and shared
+  springs split in half), so the bar's height is the total E.
+- Tooltip centering uses the `translate` property: the `rise` animation owns `transform`.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by

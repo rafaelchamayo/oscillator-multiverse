@@ -83,5 +83,5 @@ Coupled oscillators tab (N = 2…5 masses between two walls; plan in DECISIONS.m
 
 - [x] C1 — Physics (chain model, Jacobi normal modes, modal coordinates, matrix ODE, numerical tests)
 - [x] C2 — Multi-body runtime (body index in Kinematic/hold/hit, initial state snapshot, collisions)
-- [ ] C3 — Scene and UI (N selector, popovers, matrix ODE, mode presets, N traces, energy bar)
+- [x] C3 — Scene and UI (N selector, popovers, matrix ODE, mode presets, N traces, energy bar)
 - [ ] C4 — Plots and presentation (energy per mass, normal coordinates, mode shapes, configuration space)

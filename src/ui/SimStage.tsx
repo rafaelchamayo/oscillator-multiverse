@@ -4,6 +4,7 @@ import type { OscillatorPlugin } from '../oscillators/types';
 import { useT } from '../i18n/useT';
 import { SimController } from '../runtime/SimController';
 import { useSimStore } from '../state/simStore';
+import { CountStepper } from './CountStepper';
 import { ObjectPopover } from './ObjectPopover';
 import { OdeView } from './OdeView';
 import { PlotPanel } from './PlotPanel';
@@ -28,6 +29,7 @@ interface Props {
 export function SimStage({ plugin }: Props) {
   const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
   const [sim] = useState(() => new SimController(plugin.sim, plugin.id));
   const presenting = useSimStore((s) => s.presenting);
   useShortcuts(sim);
@@ -40,7 +42,14 @@ export function SimStage({ plugin }: Props) {
     sim.attach(canvas);
     const pointer = new PointerController(sim, canvas);
     if (import.meta.env.DEV) window.__osc = sim;
+    // The scene is framed below the ODE and the rows under it, whatever their height.
+    const top = topRef.current;
+    const ro = top
+      ? new ResizeObserver(() => sim.setTopInset(top.offsetTop + top.offsetHeight + 8))
+      : null;
+    if (top) ro?.observe(top);
     return () => {
+      ro?.disconnect();
       pointer.dispose();
       sim.detach();
       if (window.__osc === sim) delete window.__osc;
@@ -52,8 +61,9 @@ export function SimStage({ plugin }: Props) {
       <section className="stage stage--sim">
         <h1 className="sr-only">{t(`osc.${plugin.id}.title`)}</h1>
         <canvas ref={canvasRef} className="stage__canvas" data-testid="stage-canvas" />
-        <div className="stage-top">
+        <div className="stage-top" ref={topRef}>
           <OdeView sim={sim} />
+          <CountStepper sim={sim} />
           <Presets sim={sim} />
         </div>
         <ObjectPopover sim={sim} pluginId={plugin.id} />

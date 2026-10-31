@@ -83,7 +83,8 @@
     "show": "Show the equation (E)"
   },
   "popover": {
-    "close": "Close"
+    "close": "Close",
+    "equalize": "Set all to {value}"
   },
   "presets": {
     "label": "Presets"

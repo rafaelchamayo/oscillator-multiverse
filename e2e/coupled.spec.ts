@@ -21,13 +21,25 @@ const run = <T>(page: Page, body: string): Promise<T> =>
 test.beforeEach(async ({ page }) => {
   await page.goto('/#/coupled');
   await page.waitForFunction(() => 'debug' in ((window as { __osc?: object }).__osc ?? {}));
+  // The view eases into place once the top overlays (ODE, stepper, presets) are measured.
+  await page.waitForFunction(
+    () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const s = (window as any).__osc;
+      const prev = s.__lastScale;
+      s.__lastScale = s.view.pxPerMeter;
+      return prev !== undefined && Math.abs(prev - s.view.pxPerMeter) < 1e-3;
+    },
+    undefined,
+    { polling: 100 },
+  );
 });
 
 test('the coupled tab shows three blocks by default', async ({ page }) => {
   await expect(page.getByTestId('tab-coupled')).toHaveAttribute('aria-current', 'page');
   const d = await osc(page);
   expect(d.bodies.length).toBe(3);
-  expect(d.bodies[0]!.x).toBeCloseTo(0.3, 9);
+  expect(d.bodies[0]!.x).toBeCloseTo(0.35, 9);
 });
 
 test('dragging block 3 while paused moves only x₃ and makes it the initial condition', async ({
@@ -81,7 +93,9 @@ async function flingInPage(page: Page, from: { x: number; y: number }, dx: numbe
 }
 
 for (const dir of [1, -1]) {
-  test(`flinging block 2 ${dir > 0 ? 'right' : 'left'} gives v₂ with that sign`, async ({ page }) => {
+  test(`flinging block 2 ${dir > 0 ? 'right' : 'left'} gives v₂ with that sign`, async ({
+    page,
+  }) => {
     await run(page, 's.setPausedState(0, 0, 0);');
     const d0 = await osc(page);
     await flingInPage(page, d0.bodies[1]!.page, dir * 50);
@@ -158,4 +172,58 @@ test('SHO and damped-driven still drag body 0 only', async ({ page }) => {
   await page.waitForFunction(() => 'debug' in ((window as { __osc?: object }).__osc ?? {}));
   const d = await osc(page);
   expect(d.bodies.length).toBe(1);
+});
+
+test('the N stepper changes the number of blocks and restarts', async ({ page }) => {
+  await run(page, 's.play(); for (let i = 0; i < 60; i++) s.loop.advanceFrame();');
+  await page.getByTestId('count-plus').click();
+  let d = await osc(page);
+  expect(d.bodies.length).toBe(4);
+  expect(d.t).toBe(0);
+  expect(d.running).toBe(false);
+  await expect(page.getByTestId('count-value')).toHaveText('4');
+  await page.getByTestId('count-plus').click();
+  await expect(page.getByTestId('count-plus')).toBeDisabled();
+  for (let i = 0; i < 3; i++) await page.getByTestId('count-minus').click();
+  d = await osc(page);
+  expect(d.bodies.length).toBe(2);
+  await expect(page.getByTestId('count-minus')).toBeDisabled();
+  // Mode presets follow N, and the ODE is a 2 × 2 matrix form.
+  await expect(page.getByTestId('preset-mode2')).toBeVisible();
+  await expect(page.getByTestId('preset-mode3')).toHaveCount(0);
+  // k₂ is in K₁₁, K₁₂, K₂₁ and K₂₂.
+  await expect(page.locator('[data-testid=ode] .term--k2')).toHaveCount(4);
+});
+
+test('the Mode 2 preset stays in mode 2', async ({ page }) => {
+  await page.getByTestId('preset-mode2').click();
+  const r = await run<{ E: number; others: number }>(
+    page,
+    `for (let i = 0; i < 1200; i++) s.loop.advanceFrame();
+     const o = s.spec.model.observables(s.state, s.params, s.loop.t, {});
+     return { E: o.E, others: o.Eq1 + o.Eq3 };`,
+  );
+  expect(r.others / r.E).toBeLessThan(0.01);
+});
+
+test('hovering a spring highlights its entries of K; equalize sets every mass', async ({
+  page,
+}) => {
+  const d = await osc(page);
+  const between = { x: (d.bodies[0]!.page.x + d.bodies[1]!.page.x) / 2, y: d.bodies[0]!.page.y };
+  await page.mouse.move(between.x, between.y);
+  await expect(page.getByTestId('popover-spring2')).toBeVisible();
+  // k₂ appears in K₁₁, K₁₂, K₂₁ and K₂₂.
+  await expect(page.locator('[data-testid=ode] .term-lit')).toHaveCount(4);
+
+  // Let the spring's popover close, then open block 2's.
+  await page.mouse.move(5, 5);
+  await expect(page.getByTestId('popover-spring2')).toHaveCount(0);
+  await page.mouse.move(d.bodies[1]!.page.x, d.bodies[1]!.page.y);
+  const slider = page.getByTestId('param-m2');
+  await slider.fill('2.5');
+  await page.getByTestId('equalize-m2').click();
+  const p = await run<Record<string, number>>(page, 'return { ...s.params };');
+  expect([p.m1, p.m2, p.m3]).toEqual([2.5, 2.5, 2.5]);
+  await expect(page.getByTestId('regime')).toHaveText(/uniforme|Uniform/);
 });

@@ -31,6 +31,12 @@ export interface MechanicalSimSpec<P, I = MechanicalInit> {
   /** Badge next to the ODE (e.g. the damping regime). */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   badge?(params: any): { key: TKey; tone: 'neutral' | 'info' | 'warn' | 'good' } | null;
+  /**
+   * A parameter that sets how many bodies there are (e.g. n masses), shown as a stepper. Changing
+   * it restarts from `init(params)`.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  countParam?: { key: string; min: number; max: number; labelKey: TKey; init(params: any): I };
   /** Present when the model supports the vertical view with gravity. */
   setGravity?(params: P, g: number): void;
   /** Rest position of the body for these params (where the gravity sag puts it). */
@@ -58,6 +64,12 @@ export interface PresetDef {
   labelKey: TKey;
   /** Explanation shown while the preset button is hovered or focused. */
   descKey?: TKey;
+  /** Values for the explanation's template (e.g. the mode's frequency). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  descVars?(params: any): Record<string, string | number>;
+  /** Shown only while true (e.g. "Mode 4" needs at least 4 masses). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  visible?(params: any): boolean;
   params: Record<string, number>;
   /**
    * 1-DOF: x₀ measured from the equilibrium, and v₀. Otherwise a function of the preset's
@@ -91,6 +103,8 @@ export interface ParamDef {
   max: number;
   step: number;
   digits: number;
+  /** Parameters an "equalize" button sets to this slider's value (e.g. every mass). */
+  group?: string[];
 }
 
 export interface ChipDef {

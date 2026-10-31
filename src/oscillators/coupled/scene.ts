@@ -7,15 +7,23 @@ import {
   springOf,
   type CoupledParams,
 } from '../../models/coupled/model';
+import {
+  drawPaper,
+  drawPen,
+  PAPER_LENGTH,
+  paperPoint,
+  paperSpeed,
+  timeStep,
+} from '../../render/plots/PaperTrace';
 import { drawArrow, drawHandle } from '../../render/scene/Arrow';
 import { MetalBlock } from '../../render/scene/Block';
-import { alpha, clamp, drawCallout } from '../../render/scene/draw';
+import { alpha, clamp, drawCallout, roundRectPath } from '../../render/scene/draw';
 import { Particles } from '../../render/scene/Particles';
 import { drawSpring, springStyleFromK } from '../../render/scene/Spring';
 import { drawTrack } from '../../render/scene/Track';
 import type { FrameInfo, Hit, MechanicalScene } from '../../render/scene/types';
 import { drawWall } from '../../render/scene/Wall';
-import { colors, fonts } from '../../render/theme';
+import { bodyColors, colors, fonts } from '../../render/theme';
 import type { Vec2 } from '../../render/view';
 
 /**
@@ -26,6 +34,10 @@ import type { Vec2 } from '../../render/view';
 export const GAP = 0.85;
 export const FLOOR_W = 0.3;
 const WALL_HEIGHT = 0.7;
+/** The pens touch the paper this far below the floor. */
+const PAPER_W = FLOOR_W + 0.08;
+const X_KEYS = Array.from({ length: MAX_N }, (_, i) => `x${i + 1}`);
+const E_KEYS = Array.from({ length: MAX_N }, (_, i) => `E${i + 1}`);
 /** Shortest a spring may get (stops and drags keep at least this). */
 const MIN_SPRING = 0.08;
 /** Arrow length per unit velocity (m per m/s). */
@@ -50,6 +62,8 @@ export function createCoupledScene(): MechanicalScene<P> {
   /** Smoothed sides, so changing a mass animates its block. */
   const sides = new Float64Array(MAX_N).fill(blockSide(1));
   let firstUpdate = true;
+  /** Energy bar full height (J): E when the state was last set, then the largest E. */
+  let eScale = 0;
 
   const uOf = (f: F, i: number) => restU(f.params, i) + f.state[i]!;
 
@@ -82,7 +96,7 @@ export function createCoupledScene(): MechanicalScene<P> {
         uMin: -L - 0.3,
         uMax: L + 0.3,
         wMin: FLOOR_W - WALL_HEIGHT - 0.25,
-        wMax: FLOOR_W + 0.9,
+        wMax: PAPER_W + PAPER_LENGTH + 0.1,
       };
     },
 
@@ -165,6 +179,8 @@ export function createCoupledScene(): MechanicalScene<P> {
       }
       firstUpdate = false;
       particles.update(f.realDt);
+      const E = f.obs.E ?? 0;
+      eScale = f.running && !f.held ? Math.max(eScale, E) : E;
     },
 
     draw(g, f) {
@@ -173,6 +189,34 @@ export function createCoupledScene(): MechanicalScene<P> {
       const L = halfLength(p);
       const ppx = f.ppx;
       const px = f.px;
+
+      // Shared paper: one pen and one trace per block, in the block's color, around its rest line.
+      drawPaper(g, {
+        uMin: -L,
+        uMax: L,
+        wTop: PAPER_W,
+        window: f.window,
+        t: f.t,
+        history: f.history,
+        traces: Array.from({ length: n }, (_, i) => ({
+          key: X_KEYS[i]!,
+          offset: restU(p, i),
+          color: bodyColors[i]!,
+          body: i,
+        })),
+        ppx,
+        showTrace: f.chips.x ?? true,
+      });
+      g.lineWidth = 1.5 * ppx;
+      g.setLineDash([6 * ppx, 6 * ppx]);
+      for (let i = 0; i < n; i++) {
+        g.strokeStyle = alpha(bodyColors[i]!, 0.45);
+        g.beginPath();
+        g.moveTo(restU(p, i), PAPER_W);
+        g.lineTo(restU(p, i), PAPER_W + PAPER_LENGTH);
+        g.stroke();
+      }
+      g.setLineDash([]);
 
       drawTrack(g, -L - 0.2, L + 0.2, FLOOR_W, restU(p, 0), ppx);
       // Rest marks of the other blocks (drawTrack marks the first).
@@ -228,6 +272,7 @@ export function createCoupledScene(): MechanicalScene<P> {
           px: ppx,
           serious: f.serious,
           glow: f.hoverId === `block${i + 1}`,
+          tint: bodyColors[i],
         });
         // Velocity arrow: editable v₀ while paused, live v (dimmed) while running.
         const v = f.state[MAX_N + i]!;
@@ -248,6 +293,7 @@ export function createCoupledScene(): MechanicalScene<P> {
           px,
         );
         if (!f.running) drawHandle(g, tip, w, 7, px, false);
+        drawPen(g, u, PAPER_W, ppx, bodyColors[i]);
       }
 
       if (!f.serious) particles.draw(g, px);
@@ -284,6 +330,9 @@ export function createCoupledScene(): MechanicalScene<P> {
           { ...callout, anchor: mark },
         );
       }
+
+      if (f.axes) drawTimeLabels(g, f);
+      if (f.chips.energy) drawEnergyBar(g, f, eScale);
 
       g.font = `500 15px ${fonts.mono}`;
       g.fillStyle = colors.text;
@@ -377,6 +426,77 @@ export function createCoupledScene(): MechanicalScene<P> {
     },
   };
   return scene;
+}
+
+/** Seconds on the paper's time lines, just left of it. */
+function drawTimeLabels(g: CanvasRenderingContext2D, f: F) {
+  const L = halfLength(f.params);
+  const speed = paperSpeed(f.window);
+  const step = timeStep(f.window);
+  g.font = `500 11px ${fonts.mono}`;
+  g.textAlign = 'right';
+  g.textBaseline = 'middle';
+  for (let tk = Math.ceil((f.t - f.window) / step) * step; tk <= f.t; tk += step) {
+    if (tk < 0) continue;
+    const w = paperPoint(0, tk, f.t, PAPER_W, speed).w;
+    if (w > PAPER_W + PAPER_LENGTH - 0.04 || w < PAPER_W + 0.04) continue;
+    const p = f.view.toScreen(-L, w);
+    halo(g, `${tk} s`, p.x - 8, p.y, colors.textMuted);
+  }
+}
+
+/**
+ * Energy bar pinned to the top-right corner, stacked by mass (Eᵢ in its color). Full height is
+ * E when the state was last set, so a conserved E fills it while the energy moves between
+ * blocks; each segment is that block's share (its K plus its part of the springs).
+ */
+function drawEnergyBar(g: CanvasRenderingContext2D, f: F, scale: number) {
+  const n = countOf(f.params);
+  const H = 120;
+  const W = 18;
+  const left = f.view.width - 30 - W;
+  const top = 46;
+  const bottom = top + H;
+  const k = H / Math.max(scale, 1e-9);
+  roundRectPath(g, left, top, W, H, 4);
+  g.fillStyle = alpha(colors.ink, 0.06);
+  g.fill();
+  let y = bottom;
+  g.font = `600 11px ${fonts.mono}`;
+  g.textAlign = 'right';
+  g.textBaseline = 'middle';
+  let E = 0;
+  for (let i = 0; i < n; i++) {
+    const Ei = f.obs[E_KEYS[i]!] ?? 0;
+    E += Ei;
+    const h = Math.min(y - top, Ei * k);
+    g.fillStyle = bodyColors[i]!;
+    g.fillRect(left, y - h, W, h);
+    if (h > 12) halo(g, `${i + 1}`, left - 6, y - h / 2, bodyColors[i]!);
+    y -= h;
+  }
+  if (bottom - y > 0.5) {
+    g.fillStyle = colors.ink;
+    g.fillRect(left - 3, y - 1, W + 6, 2);
+  }
+  roundRectPath(g, left, top, W, H, 4);
+  g.strokeStyle = colors.ink;
+  g.lineWidth = 2;
+  g.stroke();
+  g.textAlign = 'center';
+  g.font = `600 12px ${fonts.mono}`;
+  halo(g, 'E', left + W / 2, top - 12, colors.ink);
+  g.font = `500 11px ${fonts.mono}`;
+  halo(g, `${formatNumber(E)} J`, left + W / 2 - 4, bottom + 14, colors.textMuted);
+}
+
+/** Text with a paper-colored halo, readable over traces and springs. */
+function halo(g: CanvasRenderingContext2D, text: string, x: number, y: number, color: string) {
+  g.lineWidth = 4;
+  g.strokeStyle = colors.surface;
+  g.strokeText(text, x, y);
+  g.fillStyle = color;
+  g.fillText(text, x, y);
 }
 
 const SUBSCRIPTS = '₀₁₂₃₄₅₆₇₈₉';

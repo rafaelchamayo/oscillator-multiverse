@@ -1,6 +1,6 @@
 import katex from 'katex';
 import { useEffect, useLayoutEffect, useMemo, useRef, type PointerEvent } from 'react';
-import { equationToLatex } from '../models/latex';
+import { equationToLatex, matrixToLatex } from '../models/latex';
 import { useT } from '../i18n/useT';
 import type { SimController } from '../runtime/SimController';
 import { useSimStore } from '../state/simStore';
@@ -9,6 +9,8 @@ import { ChevronDownIcon, ChevronUpIcon } from './icons';
 /** Natural font size of the equation (px); it shrinks to fit narrow stages. */
 const ODE_FONT = 19;
 const MIN_FONT = 10;
+/** Tallest the pill may get (px): a 5 × 5 matrix form shrinks to fit. */
+const MAX_HEIGHT = 150;
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,7 +38,13 @@ export function OdeView({ sim }: Props) {
   const html = useMemo(() => {
     if (Object.keys(params).length === 0) return '';
     const eq = sim.spec.model.latexODE(params);
-    const tex = equationToLatex(eq, (term, l) => `\\htmlClass{term term--${term.id}}{${l}}`);
+    const tex = eq.matrix
+      ? matrixToLatex(eq.matrix, (ids, l) =>
+          ids.length
+            ? `\\htmlClass{term ${ids.map((id) => `term--${id}`).join(' ')}}{${l}}`
+            : `\\htmlClass{term-zero}{${l}}`,
+        )
+      : equationToLatex(eq, (term, l) => `\\htmlClass{term term--${term.id}}{${l}}`);
     return katex.renderToString(tex, {
       throwOnError: false,
       displayMode: true,
@@ -51,8 +59,8 @@ export function OdeView({ sim }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const pill = useRef<HTMLDivElement>(null);
 
-  // Fit the pill to its row (.stage-top keeps clear of the clock and the energy bar).
-  // Everything inside is sized in em, so its width is proportional to the font size.
+  // Fit the pill to its row (.stage-top keeps clear of the clock and the energy bar) and to
+  // MAX_HEIGHT. Everything inside is sized in em, so its size is proportional to the font size.
   useLayoutEffect(() => {
     const el = pill.current;
     const row = el?.parentElement;
@@ -60,7 +68,7 @@ export function OdeView({ sim }: Props) {
     const fit = () => {
       el.style.fontSize = `${ODE_FONT}px`;
       const avail = row.clientWidth;
-      const k = Math.min(1, avail / el.offsetWidth);
+      const k = Math.min(1, avail / el.offsetWidth, MAX_HEIGHT / el.offsetHeight);
       el.style.fontSize = `${Math.max(MIN_FONT, ODE_FONT * k)}px`;
     };
     fit();
@@ -79,8 +87,9 @@ export function OdeView({ sim }: Props) {
   useEffect(() => {
     const ids = new Set(litKey.split(' '));
     ref.current?.querySelectorAll<HTMLElement>('.term').forEach((el) => {
-      const id = [...el.classList].find((c) => c.startsWith('term--'))?.slice(6);
-      el.classList.toggle('term-lit', !!id && ids.has(id));
+      // A matrix entry belongs to every object that contributes to it.
+      const lit = [...el.classList].some((c) => c.startsWith('term--') && ids.has(c.slice(6)));
+      el.classList.toggle('term-lit', lit);
     });
   }, [litKey, html]);
 

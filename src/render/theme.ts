@@ -46,6 +46,9 @@ export const series = {
   label: '#AEB4C2',
 } as const;
 
+/** One color per body in multi-body tabs (blocks, paper traces, plots); readable on both themes. */
+export const bodyColors = ['#3B78FF', '#F08A24', '#17A673', '#D63A9A', '#8B5CF6'] as const;
+
 /** Force vectors (on paper and in the force plot): one hue per physical cause. */
 export const forces = {
   spring: '#12A39D',

@@ -90,6 +90,8 @@ function ParamSlider({
   const value = useSimStore((s) => s.params[def.key]) ?? def.min;
   const id = `param-${def.key}`;
   const fill = ((value - def.min) / (def.max - def.min)) * 100;
+  const params = useSimStore((s) => s.params);
+  const equal = def.group?.every((k) => params[k] === value) ?? true;
   return (
     <div className="param">
       <label className="param__label" htmlFor={id}>
@@ -111,6 +113,17 @@ function ParamSlider({
         style={{ ['--fill' as string]: `${fill}%` }}
         onChange={(e) => sim.setParam(def.key, Number(e.target.value))}
       />
+      {def.group && (
+        <button
+          type="button"
+          className="param__equalize"
+          data-testid={`equalize-${def.key}`}
+          disabled={equal}
+          onClick={() => sim.setParams(def.group!, value)}
+        >
+          {t('popover.equalize', { value: `${formatNumber(value, def.digits)} ${def.unit}` })}
+        </button>
+      )}
     </div>
   );
 }

@@ -37,7 +37,13 @@ export interface PaperOptions {
   window: number;
   t: number;
   history: History;
-  xKey: string;
+  /** The trace (1-DOF tabs); `traces` replaces it with several. */
+  xKey?: string;
+  /**
+   * One trace per body: the series `key`, drawn at u = value + `offset`, in `color`; its
+   * hand-driven stretches are those where body `body` was held.
+   */
+  traces?: { key: string; offset: number; color: string; body: number }[];
   /** Meters per pixel for physical strokes. */
   ppx: number;
   showTrace: boolean;
@@ -82,21 +88,25 @@ export function drawPaper(g: CanvasRenderingContext2D, o: PaperOptions): void {
   const h = o.history;
   if (h.length < 2) return;
   const [from, to] = visibleRange(h, o.t - o.window, o.t);
-  const xr = h.get(o.xKey);
   const W = (i: number) => paperPoint(0, h.t.get(i), o.t, o.wTop, speed).w;
   const age = (i: number) => Math.max(0, 1 - (o.t - h.t.get(i)) / o.window);
-  strokeFading(
-    g,
-    from,
-    to,
-    (i) => xr.get(i),
-    W,
-    (i) => 0.15 + 0.85 * age(i),
-    (i) => h.manual.get(i) > 0,
-    colors.primary,
-    colors.highlight,
-    3 * o.ppx,
-  );
+  const traces =
+    o.traces ?? (o.xKey ? [{ key: o.xKey, offset: 0, color: colors.primary, body: 0 }] : []);
+  for (const tr of traces) {
+    const xr = h.get(tr.key);
+    strokeFading(
+      g,
+      from,
+      to,
+      (i) => xr.get(i) + tr.offset,
+      W,
+      (i) => 0.15 + 0.85 * age(i),
+      (i) => h.manual.get(i) === tr.body + 1,
+      tr.color,
+      colors.highlight,
+      3 * o.ppx,
+    );
+  }
 
   if (o.overlayKey && h.has(o.overlayKey)) {
     const ov = h.get(o.overlayKey);
@@ -115,7 +125,13 @@ export function drawPaper(g: CanvasRenderingContext2D, o: PaperOptions): void {
 }
 
 /** The pen nib under the body, touching the paper at (u, wTop). */
-export function drawPen(g: CanvasRenderingContext2D, u: number, wTop: number, ppx: number): void {
+export function drawPen(
+  g: CanvasRenderingContext2D,
+  u: number,
+  wTop: number,
+  ppx: number,
+  color: string = colors.primary,
+): void {
   const s = 9 * ppx;
   g.beginPath();
   g.moveTo(u, wTop);
@@ -126,6 +142,6 @@ export function drawPen(g: CanvasRenderingContext2D, u: number, wTop: number, pp
   g.fill();
   g.beginPath();
   g.arc(u, wTop, 3 * ppx, 0, Math.PI * 2);
-  g.fillStyle = colors.primary;
+  g.fillStyle = color;
   g.fill();
 }
