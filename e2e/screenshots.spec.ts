@@ -341,11 +341,51 @@ test('screenshot presentation coupled N = 5 (matrix ODE on canvas)', async ({ pa
   await saveCanvas(page, 'e2e/screenshots/present-coupled-canvas.png');
 });
 
-test('screenshot quantum placeholder (coherent packet)', async ({ page }) => {
+test('screenshot quantum states: ground, 0 + 1, n = 10 classical, coherent, cat, revival', async ({
+  page,
+}) => {
   await open(page, '/#/quantum-ho', 'es');
-  await page.waitForTimeout(600);
-  await page.screenshot({ path: 'e2e/screenshots/quantum-placeholder.png' });
-  await sim(page, 's.play(); for (let i = 0; i < 200; i++) s.loop.advanceFrame();');
+  const shot = async (preset: string, frames: number, name: string) => {
+    await page.getByTestId(`preset-${preset}`).click();
+    await sim(page, `for (let i = 0; i < ${frames}; i++) s.loop.advanceFrame(); s.pause();`);
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `e2e/screenshots/quantum-${name}.png` });
+  };
+  await shot('ground', 30, 'ground');
+  await shot('slosh', 200, 'slosh');
+  await shot('correspondence', 60, 'n10-classical');
+  await shot('coherent', 520, 'coherent-carpet');
+  await shot('cat', 330, 'cat');
+  await shot('revival', 760, 'revival');
+});
+
+test('screenshot quantum level hover + wheel popover', async ({ page }) => {
+  await open(page, '/#/quantum-ho', 'es');
+  await page.getByTestId('preset-slosh').click();
+  await sim(page, 'for (let i = 0; i < 90; i++) s.loop.advanceFrame(); s.pause();');
+  const lvl = (await sim(page, 'return s.pageCoords(-0.6, -3.5 * 0.62);')) as {
+    x: number;
+    y: number;
+  };
+  await page.mouse.move(lvl.x, lvl.y);
   await page.waitForTimeout(400);
-  await page.screenshot({ path: 'e2e/screenshots/quantum-placeholder-running.png' });
+  await page.screenshot({ path: 'e2e/screenshots/quantum-level-hover.png' });
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(500);
+  const wh = (await sim(page, 'return s.pageCoords(7.35, -1.5 * 0.62);')) as {
+    x: number;
+    y: number;
+  };
+  await page.mouse.move(wh.x, wh.y);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: 'e2e/screenshots/quantum-wheel-popover.png' });
+});
+
+test('screenshot quantum narrow + preset explanation', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 720 });
+  await open(page, '/#/quantum-ho', 'es');
+  await page.getByTestId('preset-cat').hover();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: 'e2e/screenshots/quantum-narrow.png' });
 });

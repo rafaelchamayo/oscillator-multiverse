@@ -16,8 +16,10 @@ export function PlotPanel({ sim }: Props) {
   const traceWindow = useSimStore((s) => s.traceWindow);
   const cycleTraceWindow = useSimStore((s) => s.cycleTraceWindow);
   const visible = sim.spec.panels.filter((p) => p.chips.some((c) => chips[c]));
-  const plotChips = sim.spec.chips.filter((c) => c.group !== 'vectors');
-  const vectorChips = sim.spec.chips.filter((c) => c.group === 'vectors');
+  const plotChips = sim.spec.chips.filter((c) => !c.group || c.group === 'plots');
+  const groups = (['vectors', 'scene'] as const)
+    .map((g) => ({ id: g, chips: sim.spec.chips.filter((c) => c.group === g) }))
+    .filter((g) => g.chips.length > 0);
 
   return (
     <aside className="side-panel plots" aria-label={t('plots.label')}>
@@ -38,14 +40,14 @@ export function PlotPanel({ sim }: Props) {
           {t('plots.window', { s: traceWindow })}
         </button>
       </div>
-      {vectorChips.length > 0 && (
-        <div className="plots__vectors" role="group" aria-label={t('plots.vectors')}>
-          <span className="plots__group-label">{t('plots.vectors')}</span>
-          {vectorChips.map((c) => (
+      {groups.map((g) => (
+        <div key={g.id} className="plots__vectors" role="group" aria-label={t(`plots.${g.id}`)}>
+          <span className="plots__group-label">{t(`plots.${g.id}`)}</span>
+          {g.chips.map((c) => (
             <Chip key={c.id} chip={c} on={!!chips[c.id]} />
           ))}
         </div>
-      )}
+      ))}
       <div className="plots__stack">
         {visible.length === 0 && <p className="plots__empty">{t('plots.empty')}</p>}
         {visible.map((p) => (

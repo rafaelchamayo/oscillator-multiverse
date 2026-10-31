@@ -17,11 +17,12 @@ export function Tabs({ plugins, activeId }: Props) {
           className="tabs__tab"
           aria-current={p.id === activeId ? 'page' : undefined}
           data-testid={`tab-${p.id}`}
+          title={t(`osc.${p.id}.short`)}
         >
           <span className="tabs__icon" aria-hidden>
             {p.icon}
           </span>
-          {t(`osc.${p.id}.short`)}
+          <span className="tabs__label">{t(`osc.${p.id}.short`)}</span>
         </a>
       ))}
     </nav>

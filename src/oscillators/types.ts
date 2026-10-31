@@ -28,9 +28,12 @@ export interface MechanicalSimSpec<P, I = MechanicalInit> {
   createExtras?(api: SimApi): SimExtras;
   /** Small buttons that load a configuration (params, initial condition, chips) and play. */
   presets?: PresetDef[];
-  /** Badge next to the ODE (e.g. the damping regime). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  badge?(params: any): { key: TKey; tone: 'neutral' | 'info' | 'warn' | 'good' } | null;
+  /** Badge next to the ODE (e.g. the damping regime, or the kind of quantum state). */
+  badge?(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    params: any,
+    state: Float64Array,
+  ): { key: TKey; tone: 'neutral' | 'info' | 'warn' | 'good' } | null;
   /**
    * A parameter that sets how many bodies there are (e.g. n masses), shown as a stepper. Changing
    * it restarts from `init(params)`.
@@ -105,6 +108,11 @@ export interface ParamDef {
   digits: number;
   /** Parameters an "equalize" button sets to this slider's value (e.g. every mass). */
   group?: string[];
+  /**
+   * A slider on the state instead of a parameter (e.g. a quantum coefficient |cₙ|): it shows
+   * `get(state)` live and edits through `SimController.editState`.
+   */
+  state?: { get(state: Float64Array): number; set(state: Float64Array, value: number): void };
 }
 
 export interface ChipDef {
@@ -113,8 +121,8 @@ export interface ChipDef {
   defaultOn: boolean;
   /** Dot color in the chip. */
   color: string;
-  /** `vectors` chips toggle force arrows on the block instead of plots. */
-  group?: 'plots' | 'vectors';
+  /** `vectors` chips toggle force arrows on the block, `scene` chips other scene layers. */
+  group?: 'plots' | 'vectors' | 'scene';
 }
 
 export interface PanelAction {

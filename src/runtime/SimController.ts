@@ -602,7 +602,7 @@ export class SimController<P> {
 
   /** The ODE pill's content: equation, badge and the hovered object's terms. */
   private odeCard(): OdeCard {
-    const badge = this.spec.badge?.(this.params as Record<string, number>) ?? null;
+    const badge = this.spec.badge?.(this.params, this.state) ?? null;
     const tr = this.translator(useUiStore.getState().lang);
     return {
       eq: this.spec.model.latexODE(this.params),
@@ -729,6 +729,12 @@ export class SimController<P> {
     const hl = this.highlightId;
     if (ui.hoverId !== this.hoverId || ui.highlightId !== hl) {
       useSimStore.setState({ hoverId: this.hoverId, highlightId: hl });
+    }
+    // The badge may depend on the state (e.g. stationary vs superposition), so it is checked
+    // every frame and pushed to React only when it changes.
+    const badge = this.spec.badge?.(this.params, this.state) ?? null;
+    if (badge?.key !== ui.badge?.key || badge?.tone !== ui.badge?.tone) {
+      useSimStore.setState({ badge });
     }
   }
 

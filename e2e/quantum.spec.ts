@@ -145,11 +145,89 @@ test('editState while paused becomes the initial condition', async ({ page }) =>
 });
 
 test('hovering the parabola shows its popover and lights the potential term', async ({ page }) => {
+  // E_SCALE = 0.62 scene units per ħω; the packet starts at x = +2.5, far from x = −3.5.
+  await run(page, 's.pause();');
   const p = await run<{ x: number; y: number }>(
     page,
-    'return s.pageCoords(-3.5, -0.5 * 3.5 * 3.5 * 0.5);',
+    'return s.pageCoords(-3.5, -0.5 * 3.5 * 3.5 * 0.62);',
   );
   await page.mouse.move(p.x, p.y);
   await expect(page.getByTestId('popover-potential')).toBeVisible();
   await expect(page.locator('[data-testid=ode] .term--potential.term-lit')).toHaveCount(1);
+});
+
+/** Page coordinates of scene point (u, w). */
+const at = (page: Page, u: number, w: number) =>
+  run<{ x: number; y: number }>(page, `return s.pageCoords(${u}, ${w});`);
+
+const WHEEL_U = 7.35;
+const WHEEL_R = 0.27;
+const levelW = (n: number) => -(n + 0.5) * 0.62;
+
+test('dragging inside wheel 3 sets c₃ and keeps the total probability 1', async ({ page }) => {
+  await page.getByTestId('preset-ground').click();
+  await run(page, 's.pause();');
+  // Half the radius, straight up: |c₃| = 0.5, arg c₃ = π/2.
+  const p = await at(page, WHEEL_U, levelW(3) - 0.5 * WHEEL_R);
+  await page.mouse.move(p.x, p.y);
+  await page.mouse.down();
+  await page.mouse.up();
+  const o = await obs(page);
+  expect(o.P3).toBeCloseTo(0.25, 2);
+  expect(o.P0).toBeCloseTo(0.75, 2);
+  let total = 0;
+  for (let n = 0; n <= 40; n++) total += o[`P${n}`]!;
+  expect(total).toBeCloseTo(1, 12);
+  const phase = await run<number>(page, 'return Math.atan2(s.state[41 + 3], s.state[3]);');
+  expect(phase).toBeCloseTo(Math.PI / 2, 1);
+  // Paused: the edit is the new initial condition.
+  await run(page, 's.reset();');
+  expect((await obs(page)).P3).toBeCloseTo(0.25, 2);
+});
+
+test('each level popover has only its own two sliders, and they edit the state', async ({
+  page,
+}) => {
+  await page.getByTestId('preset-slosh').click();
+  await run(page, 's.pause();');
+  // Near the left turning point (√5), away from the packet at ⟨x⟩ = 1/√2.
+  const p = await at(page, -2.1, levelW(2));
+  await page.mouse.move(p.x, p.y);
+  await expect(page.getByTestId('popover-level2')).toBeVisible();
+  await expect(page.getByRole('slider')).toHaveCount(2);
+  await page.getByTestId('param-amp2').fill('0.6');
+  const o = await obs(page);
+  expect(o.P2).toBeCloseTo(0.36, 6);
+  expect(o.P0! + o.P1!).toBeCloseTo(0.64, 6);
+});
+
+test('the badge follows the state', async ({ page }) => {
+  await page.getByTestId('preset-ground').click();
+  await expect(page.getByTestId('regime')).toHaveText(/estacionario|Stationary/);
+  await page.getByTestId('preset-coherent').click();
+  await expect(page.getByTestId('regime')).toHaveText(/coherente|Coherent/);
+  await page.getByTestId('preset-slosh').click();
+  await expect(page.getByTestId('regime')).toHaveText(/Superposi/);
+});
+
+test('the coherent preset follows the classical orbit: ⟨x⟩(π) = −2.5', async ({ page }) => {
+  await page.getByTestId('preset-coherent').click();
+  const x = await run<number>(
+    page,
+    `s.pause(); s.reset();
+     const k = s.spec.model;
+     // Exact evolution: step to t = π in one go.
+     k.step(s.state, s.params, 0, Math.PI);
+     return k.getPos(s.state);`,
+  );
+  expect(Math.abs(x + 2.5)).toBeLessThan(1e-6);
+});
+
+test('the |ψ|² chip and the n = 10 preset switch the scene view', async ({ page }) => {
+  await expect(page.getByTestId('chip-density')).toHaveAttribute('aria-pressed', 'false');
+  await page.getByTestId('preset-correspondence').click();
+  await expect(page.getByTestId('chip-density')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('chip-classical')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('preset-cat').click();
+  await expect(page.getByTestId('chip-density')).toHaveAttribute('aria-pressed', 'false');
 });

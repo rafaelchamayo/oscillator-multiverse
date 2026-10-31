@@ -87,7 +87,9 @@ function ParamSlider({
   def: ParamDef;
 }) {
   const t = useT();
-  const value = useSimStore((s) => s.params[def.key]) ?? def.min;
+  const stored = useSimStore((s) => s.params[def.key]) ?? def.min;
+  const live = useLiveState(sim, def.state?.get);
+  const value = def.state ? live : stored;
   const id = `param-${def.key}`;
   const fill = ((value - def.min) / (def.max - def.min)) * 100;
   const params = useSimStore((s) => s.params);
@@ -111,7 +113,11 @@ function ParamSlider({
         step={def.step}
         value={value}
         style={{ ['--fill' as string]: `${fill}%` }}
-        onChange={(e) => sim.setParam(def.key, Number(e.target.value))}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          if (def.state) sim.editState((s) => def.state!.set(s, v));
+          else sim.setParam(def.key, v);
+        }}
       />
       {def.group && (
         <button
@@ -126,4 +132,24 @@ function ParamSlider({
       )}
     </div>
   );
+}
+
+/** A value read from the simulation state on every animation frame (state-backed sliders). */
+function useLiveState(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sim: SimController<any>,
+  get: ((state: Float64Array) => number) | undefined,
+): number {
+  const [value, setValue] = useState(() => (get ? get(sim.state) : 0));
+  useEffect(() => {
+    if (!get) return;
+    let id = 0;
+    const tick = () => {
+      setValue(get(sim.state));
+      id = requestAnimationFrame(tick);
+    };
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [sim, get]);
+  return value;
 }

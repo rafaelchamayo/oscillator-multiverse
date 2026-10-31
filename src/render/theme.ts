@@ -109,3 +109,46 @@ export function applyThemeToDocument(root: HTMLElement = document.documentElemen
   root.style.setProperty('--glow-primary', glow.primary);
   root.style.setProperty('--glow-highlight', glow.highlight);
 }
+
+/**
+ * Domain coloring of a complex number by its phase θ = arg z: a hue wheel (saturation 0.78,
+ * lightness 0.5) turned so that θ = 0 is the accent blue, and real positive amplitudes look like
+ * the rest of the app. Shared by the wave, the phasor wheels and the quantum carpet.
+ */
+export function phaseRGB(theta: number, out: number[] = [0, 0, 0]): number[] {
+  const turns = (((220 - (theta * 180) / Math.PI) % 360) + 360) % 360;
+  const s = 0.78;
+  const l = 0.5;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const h = turns / 60;
+  const x = c * (1 - Math.abs((h % 2) - 1));
+  const m = l - c / 2;
+  const [r, g, b] =
+    h < 1
+      ? [c, x, 0]
+      : h < 2
+        ? [x, c, 0]
+        : h < 3
+          ? [0, c, x]
+          : h < 4
+            ? [0, x, c]
+            : h < 5
+              ? [x, 0, c]
+              : [c, 0, x];
+  out[0] = Math.round((r + m) * 255);
+  out[1] = Math.round((g + m) * 255);
+  out[2] = Math.round((b + m) * 255);
+  return out;
+}
+
+const PHASE_BINS = 72;
+const PHASE_STYLES = Array.from({ length: PHASE_BINS }, (_, k) => {
+  const [r, g, b] = phaseRGB((k / PHASE_BINS) * 2 * Math.PI);
+  return `rgb(${r},${g},${b})`;
+});
+
+/** CSS color of a phase (quantized to 5°, so no string is built per call). */
+export function phaseColor(theta: number): string {
+  const k = Math.round((theta / (2 * Math.PI)) * PHASE_BINS);
+  return PHASE_STYLES[((k % PHASE_BINS) + PHASE_BINS) % PHASE_BINS]!;
+}

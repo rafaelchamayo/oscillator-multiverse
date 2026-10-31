@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { TKey } from '../i18n/dict';
 
 export type Perspective = 'horizontal' | 'vertical';
 export const TRACE_WINDOWS = [4, 8, 16] as const;
@@ -40,6 +41,8 @@ interface SimUiState {
   helpOpen: boolean;
   /** The interactive ODE pill is collapsed to a small button. */
   odeHidden: boolean;
+  /** Badge next to the ODE, refreshed by the controller when it changes. */
+  badge: { key: TKey; tone: 'neutral' | 'info' | 'warn' | 'good' } | null;
   setSerious: (v: boolean) => void;
   togglePerspective: () => void;
   setGravity: (v: boolean) => void;
@@ -67,6 +70,7 @@ export const useSimStore = create<SimUiState>((set) => ({
   recording: false,
   helpOpen: false,
   odeHidden: false,
+  badge: null,
   setSerious: (serious) => set({ serious }),
   togglePerspective: () =>
     set((s) => ({

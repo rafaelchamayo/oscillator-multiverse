@@ -304,6 +304,34 @@ Minor, reversible decisions taken during implementation, and why.
   - an ⟨x⟩/⟨p⟩ panel.
   - The time is shown as ωt.
 
+## Quantum harmonic oscillator — Q3: scene and interaction
+
+- **Layout**: u = x and w = −E·0.62. Levels n = 0…10 are drawn inside the parabola, colored by their occupation
+  and phase. Hovering a level draws ψₙ on it, with its n nodes. ψ is drawn at the height of ⟨E⟩.
+- **Domain coloring**: `phaseRGB`/`phaseColor` in `theme.ts`. Phase 0 is the accent blue, and the hue turns with
+  arg ψ, quantized to 72 bins. The wave is filled with a horizontal gradient, not with per-column strokes, which
+  left stripes. A scene chip (`density`) switches the view to |ψ|², `reim` adds Re/Im, and `classical` adds the
+  classical density and the turning points ±√(2⟨E⟩).
+- **Phasor wheels**: one per shown level, on the right. Each is a `handle` hit whose drag sets
+  cₙ = (pointer − center)/R through `setCoefficient`, so the norm stays 1. While paused, the edit becomes the new
+  initial state (`editState`).
+- **State sliders**: `ParamDef.state {get, set}` lets a popover slider edit the state instead of a parameter.
+  `ObjectPopover` reads the value live (rAF), because the state rotates under it. Each level and each wheel
+  shows only its own |cₙ| and φₙ.
+- **Badge from the state**: `badge(params, state)` is evaluated in `syncHover` and stored only when it changes.
+  It reads stationary (one Pₙ = 1), coherent (Δx = Δp = 1/√2) or superposition.
+- **Quantum carpet** (chip `carpet`, on by default): the analogue of the paper trace, a 256-row ring of |ψ(x, t)|²
+  colored by phase. Evolution is exact, so each row is back-evolved to its own time and burst advances leave no
+  gaps. It is refilled from t = 0 whenever time goes back or the history length drops (reset, preset).
+- **Bodies and constraints**: `bodyW` follows the last drawn wave, so drag and fling grab the packet where it is
+  drawn. `constrain` is a no-op, because a bounce would rewrite a superposition.
+- **Hit order**: v₀ arrow, then wheels, packet, levels, potential. A level is only hoverable away from the
+  packet, by design: the packet is the main object.
+- **Presets**: ground, n = 1, 0 + 1, n = 10 (with |ψ|² + classical), coherent, cat, revival (with the carpet).
+  Each one sets the scene chips that suit it.
+- **Narrow windows**: below 1100 px, inactive tabs show only their icon, and the label moves to `title`. Below
+  760 px the brand title is hidden, which leaves room for four tabs.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by

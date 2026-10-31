@@ -9,14 +9,157 @@
     },
     "packet": {
       "title": "Wave function",
-      "desc": "Its height is |ψ(x)|²: the probability of finding the particle at x. Drag it to make a coherent state somewhere else; fling it to give it momentum."
+      "desc": "Its height is |ψ(x)| and its color the phase (arg ψ); with the |ψ|² chip you see the probability of finding the particle at x. Drag it to make a coherent state somewhere else; fling it to give it momentum."
     },
     "velocity": {
       "title": "Momentum ⟨p⟩",
       "desc": "The packet's mean momentum. While paused, drag its tip to choose ⟨p⟩(0)."
+    },
+    "level0": {
+      "title": "Level n = 0",
+      "desc": "The eigenstate ψ₀, with energy E₀ = 0.5 ħω and 0 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel0": {
+      "title": "Phasor c₀",
+      "desc": "The coefficient c₀ in the complex plane: its length is |c₀| and its angle the phase. It turns clockwise at angular speed E₀ = 0.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level1": {
+      "title": "Level n = 1",
+      "desc": "The eigenstate ψ₁, with energy E₁ = 1.5 ħω and 1 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel1": {
+      "title": "Phasor c₁",
+      "desc": "The coefficient c₁ in the complex plane: its length is |c₁| and its angle the phase. It turns clockwise at angular speed E₁ = 1.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level2": {
+      "title": "Level n = 2",
+      "desc": "The eigenstate ψ₂, with energy E₂ = 2.5 ħω and 2 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel2": {
+      "title": "Phasor c₂",
+      "desc": "The coefficient c₂ in the complex plane: its length is |c₂| and its angle the phase. It turns clockwise at angular speed E₂ = 2.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level3": {
+      "title": "Level n = 3",
+      "desc": "The eigenstate ψ₃, with energy E₃ = 3.5 ħω and 3 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel3": {
+      "title": "Phasor c₃",
+      "desc": "The coefficient c₃ in the complex plane: its length is |c₃| and its angle the phase. It turns clockwise at angular speed E₃ = 3.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level4": {
+      "title": "Level n = 4",
+      "desc": "The eigenstate ψ₄, with energy E₄ = 4.5 ħω and 4 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel4": {
+      "title": "Phasor c₄",
+      "desc": "The coefficient c₄ in the complex plane: its length is |c₄| and its angle the phase. It turns clockwise at angular speed E₄ = 4.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level5": {
+      "title": "Level n = 5",
+      "desc": "The eigenstate ψ₅, with energy E₅ = 5.5 ħω and 5 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel5": {
+      "title": "Phasor c₅",
+      "desc": "The coefficient c₅ in the complex plane: its length is |c₅| and its angle the phase. It turns clockwise at angular speed E₅ = 5.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level6": {
+      "title": "Level n = 6",
+      "desc": "The eigenstate ψ₆, with energy E₆ = 6.5 ħω and 6 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel6": {
+      "title": "Phasor c₆",
+      "desc": "The coefficient c₆ in the complex plane: its length is |c₆| and its angle the phase. It turns clockwise at angular speed E₆ = 6.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level7": {
+      "title": "Level n = 7",
+      "desc": "The eigenstate ψ₇, with energy E₇ = 7.5 ħω and 7 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel7": {
+      "title": "Phasor c₇",
+      "desc": "The coefficient c₇ in the complex plane: its length is |c₇| and its angle the phase. It turns clockwise at angular speed E₇ = 7.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level8": {
+      "title": "Level n = 8",
+      "desc": "The eigenstate ψ₈, with energy E₈ = 8.5 ħω and 8 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel8": {
+      "title": "Phasor c₈",
+      "desc": "The coefficient c₈ in the complex plane: its length is |c₈| and its angle the phase. It turns clockwise at angular speed E₈ = 8.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level9": {
+      "title": "Level n = 9",
+      "desc": "The eigenstate ψ₉, with energy E₉ = 9.5 ħω and 9 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel9": {
+      "title": "Phasor c₉",
+      "desc": "The coefficient c₉ in the complex plane: its length is |c₉| and its angle the phase. It turns clockwise at angular speed E₉ = 9.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
+    },
+    "level10": {
+      "title": "Level n = 10",
+      "desc": "The eigenstate ψ₁₀, with energy E₁₀ = 10.5 ħω and 10 nodes. On its own it is stationary: |ψ|² never changes. Its sliders set how much of it is in the superposition, and with which phase."
+    },
+    "wheel10": {
+      "title": "Phasor c₁₀",
+      "desc": "The coefficient c₁₀ in the complex plane: its length is |c₁₀| and its angle the phase. It turns clockwise at angular speed E₁₀ = 10.5 ω. Drag inside the wheel to change it; the others rescale so the total probability stays 1."
     }
   },
-  "params": {},
-  "chips": { "expect": "⟨x⟩, ⟨p⟩" },
-  "panels": { "expect": "Expectation values" }
+  "params": {
+    "amp0": "Amplitude",
+    "phase0": "Phase",
+    "amp1": "Amplitude",
+    "phase1": "Phase",
+    "amp2": "Amplitude",
+    "phase2": "Phase",
+    "amp3": "Amplitude",
+    "phase3": "Phase",
+    "amp4": "Amplitude",
+    "phase4": "Phase",
+    "amp5": "Amplitude",
+    "phase5": "Phase",
+    "amp6": "Amplitude",
+    "phase6": "Phase",
+    "amp7": "Amplitude",
+    "phase7": "Phase",
+    "amp8": "Amplitude",
+    "phase8": "Phase",
+    "amp9": "Amplitude",
+    "phase9": "Phase",
+    "amp10": "Amplitude",
+    "phase10": "Phase"
+  },
+  "chips": {
+    "expect": "⟨x⟩, ⟨p⟩",
+    "density": "|ψ|²",
+    "reim": "Re ψ, Im ψ",
+    "classical": "Classical",
+    "carpet": "Carpet"
+  },
+  "panels": {
+    "expect": "Expectation values"
+  },
+  "levelInfo": "E = {E} ħω · {nodes} nodes",
+  "badge": {
+    "stationary": "Stationary state",
+    "coherent": "Coherent state",
+    "superposition": "Superposition"
+  },
+  "presets": {
+    "ground": "Ground",
+    "first": "n = 1",
+    "slosh": "0 + 1",
+    "correspondence": "n = 10",
+    "coherent": "Coherent",
+    "cat": "Cat",
+    "revival": "Revival"
+  },
+  "presetInfo": {
+    "ground": "The lowest energy state, E₀ = ½ ħω: even at rest the particle never stands still (zero-point energy). It is stationary: the color turns but |ψ| never changes.",
+    "first": "The first excited state: a node in the middle, where the particle is never found. The phase on the left and on the right is opposite (complementary colors).",
+    "slosh": "Half ψ₀, half ψ₁. Their phases turn at different speeds (½ and 3/2), so they interfere back and forth: the density sloshes from side to side with period 2π.",
+    "correspondence": "n = 10 with the classical density dotted: a classical particle spends most of its time near the turning points, and |ψ|² wiggles around that curve. The larger n, the closer they get (correspondence principle).",
+    "coherent": "A coherent state |α⟩: a minimum-uncertainty Gaussian packet (Δx·Δp = ½) that oscillates exactly like the classical block, without changing shape.",
+    "cat": "Schrödinger cat: |α⟩ + |−α⟩, the packet on the left and on the right at once. When the two halves cross in the middle, interference fringes appear.",
+    "revival": "A mix of ψ₀, ψ₂ and ψ₅ with different phases. It looks messy, but at t = 2π everything starts over exactly: watch the carpet repeat."
+  }
 }

@@ -132,8 +132,39 @@ button {
   color: var(--c-primary);
 }
 
+/* Narrow windows: inactive tabs keep only their icon (the label stays for screen readers). */
+@media (max-width: 1100px) {
+  .header {
+    gap: 16px;
+  }
+
+  .tabs {
+    gap: 4px;
+  }
+
+  .tabs__tab:not([aria-current='page']) {
+    padding: 5px;
+  }
+
+  .tabs__tab:not([aria-current='page']) .tabs__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .brand__title {
+    display: none;
+  }
+}
+
 /* Language switch */
 .lang-switch {
+  flex-shrink: 0;
   display: flex;
   padding: 3px;
   border-radius: var(--r-pill);

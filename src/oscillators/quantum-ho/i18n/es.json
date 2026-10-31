@@ -9,14 +9,157 @@
     },
     "packet": {
       "title": "Función de onda",
-      "desc": "La altura es |ψ(x)|²: la probabilidad de encontrar la partícula en x. Arrástrala para crear un estado coherente en otra posición; láncela para darle momento."
+      "desc": "La altura es |ψ(x)| y el color su fase (arg ψ); con el chip |ψ|² ves la probabilidad de encontrar la partícula en x. Arrástrala para crear un estado coherente en otra posición; lánzala para darle momento."
     },
     "velocity": {
       "title": "Momento ⟨p⟩",
       "desc": "El momento medio del paquete. En pausa, arrastra su punta para elegir ⟨p⟩(0)."
+    },
+    "level0": {
+      "title": "Nivel n = 0",
+      "desc": "El autoestado ψ₀, con energía E₀ = 0.5 ħω y 0 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel0": {
+      "title": "Fasor c₀",
+      "desc": "El coeficiente c₀ en el plano complejo: el largo es |c₀| y el ángulo su fase. Gira en sentido horario con velocidad angular E₀ = 0.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level1": {
+      "title": "Nivel n = 1",
+      "desc": "El autoestado ψ₁, con energía E₁ = 1.5 ħω y 1 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel1": {
+      "title": "Fasor c₁",
+      "desc": "El coeficiente c₁ en el plano complejo: el largo es |c₁| y el ángulo su fase. Gira en sentido horario con velocidad angular E₁ = 1.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level2": {
+      "title": "Nivel n = 2",
+      "desc": "El autoestado ψ₂, con energía E₂ = 2.5 ħω y 2 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel2": {
+      "title": "Fasor c₂",
+      "desc": "El coeficiente c₂ en el plano complejo: el largo es |c₂| y el ángulo su fase. Gira en sentido horario con velocidad angular E₂ = 2.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level3": {
+      "title": "Nivel n = 3",
+      "desc": "El autoestado ψ₃, con energía E₃ = 3.5 ħω y 3 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel3": {
+      "title": "Fasor c₃",
+      "desc": "El coeficiente c₃ en el plano complejo: el largo es |c₃| y el ángulo su fase. Gira en sentido horario con velocidad angular E₃ = 3.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level4": {
+      "title": "Nivel n = 4",
+      "desc": "El autoestado ψ₄, con energía E₄ = 4.5 ħω y 4 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel4": {
+      "title": "Fasor c₄",
+      "desc": "El coeficiente c₄ en el plano complejo: el largo es |c₄| y el ángulo su fase. Gira en sentido horario con velocidad angular E₄ = 4.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level5": {
+      "title": "Nivel n = 5",
+      "desc": "El autoestado ψ₅, con energía E₅ = 5.5 ħω y 5 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel5": {
+      "title": "Fasor c₅",
+      "desc": "El coeficiente c₅ en el plano complejo: el largo es |c₅| y el ángulo su fase. Gira en sentido horario con velocidad angular E₅ = 5.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level6": {
+      "title": "Nivel n = 6",
+      "desc": "El autoestado ψ₆, con energía E₆ = 6.5 ħω y 6 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel6": {
+      "title": "Fasor c₆",
+      "desc": "El coeficiente c₆ en el plano complejo: el largo es |c₆| y el ángulo su fase. Gira en sentido horario con velocidad angular E₆ = 6.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level7": {
+      "title": "Nivel n = 7",
+      "desc": "El autoestado ψ₇, con energía E₇ = 7.5 ħω y 7 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel7": {
+      "title": "Fasor c₇",
+      "desc": "El coeficiente c₇ en el plano complejo: el largo es |c₇| y el ángulo su fase. Gira en sentido horario con velocidad angular E₇ = 7.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level8": {
+      "title": "Nivel n = 8",
+      "desc": "El autoestado ψ₈, con energía E₈ = 8.5 ħω y 8 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel8": {
+      "title": "Fasor c₈",
+      "desc": "El coeficiente c₈ en el plano complejo: el largo es |c₈| y el ángulo su fase. Gira en sentido horario con velocidad angular E₈ = 8.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level9": {
+      "title": "Nivel n = 9",
+      "desc": "El autoestado ψ₉, con energía E₉ = 9.5 ħω y 9 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel9": {
+      "title": "Fasor c₉",
+      "desc": "El coeficiente c₉ en el plano complejo: el largo es |c₉| y el ángulo su fase. Gira en sentido horario con velocidad angular E₉ = 9.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
+    },
+    "level10": {
+      "title": "Nivel n = 10",
+      "desc": "El autoestado ψ₁₀, con energía E₁₀ = 10.5 ħω y 10 nodos. Solo, es estacionario: |ψ|² no cambia nunca. Sus sliders fijan cuánto de él hay en la superposición y con qué fase."
+    },
+    "wheel10": {
+      "title": "Fasor c₁₀",
+      "desc": "El coeficiente c₁₀ en el plano complejo: el largo es |c₁₀| y el ángulo su fase. Gira en sentido horario con velocidad angular E₁₀ = 10.5 ω. Arrastra dentro de la rueda para cambiarlo; los demás se reescalan para que la probabilidad total siga siendo 1."
     }
   },
-  "params": {},
-  "chips": { "expect": "⟨x⟩, ⟨p⟩" },
-  "panels": { "expect": "Valores esperados" }
+  "params": {
+    "amp0": "Amplitud",
+    "phase0": "Fase",
+    "amp1": "Amplitud",
+    "phase1": "Fase",
+    "amp2": "Amplitud",
+    "phase2": "Fase",
+    "amp3": "Amplitud",
+    "phase3": "Fase",
+    "amp4": "Amplitud",
+    "phase4": "Fase",
+    "amp5": "Amplitud",
+    "phase5": "Fase",
+    "amp6": "Amplitud",
+    "phase6": "Fase",
+    "amp7": "Amplitud",
+    "phase7": "Fase",
+    "amp8": "Amplitud",
+    "phase8": "Fase",
+    "amp9": "Amplitud",
+    "phase9": "Fase",
+    "amp10": "Amplitud",
+    "phase10": "Fase"
+  },
+  "chips": {
+    "expect": "⟨x⟩, ⟨p⟩",
+    "density": "|ψ|²",
+    "reim": "Re ψ, Im ψ",
+    "classical": "Clásico",
+    "carpet": "Alfombra"
+  },
+  "panels": {
+    "expect": "Valores esperados"
+  },
+  "levelInfo": "E = {E} ħω · {nodes} nodos",
+  "badge": {
+    "stationary": "Estado estacionario",
+    "coherent": "Estado coherente",
+    "superposition": "Superposición"
+  },
+  "presets": {
+    "ground": "Fundamental",
+    "first": "n = 1",
+    "slosh": "0 + 1",
+    "correspondence": "n = 10",
+    "coherent": "Coherente",
+    "cat": "Gato",
+    "revival": "Resurgimiento"
+  },
+  "presetInfo": {
+    "ground": "El estado de menor energía, E₀ = ½ ħω: ni siquiera en reposo la partícula se queda quieta (energía de punto cero). Es estacionario: el color gira pero |ψ| no cambia.",
+    "first": "El primer excitado: un nodo en el centro, donde nunca se encuentra la partícula. La fase a la izquierda y a la derecha es opuesta (colores complementarios).",
+    "slosh": "Mitad ψ₀ y mitad ψ₁. Sus fases giran a velocidades distintas (½ y 3/2), así que interfieren alternando: la densidad se mece de un lado al otro con período 2π.",
+    "correspondence": "n = 10 con la densidad clásica punteada: la partícula clásica pasa casi todo el tiempo cerca de los extremos, y |ψ|² oscila alrededor de esa curva. Con n grande se parecen cada vez más (principio de correspondencia).",
+    "coherent": "Un estado coherente |α⟩: un paquete gaussiano de incertidumbre mínima (Δx·Δp = ½) que oscila exactamente como el bloque clásico, sin deformarse.",
+    "cat": "Gato de Schrödinger: |α⟩ + |−α⟩, el paquete a la izquierda y a la derecha a la vez. Cuando las dos mitades se cruzan en el centro aparecen franjas de interferencia.",
+    "revival": "Una mezcla de ψ₀, ψ₂ y ψ₅ con fases distintas. Se ve desordenada, pero en t = 2π todo vuelve exactamente a empezar: mira la alfombra repetirse."
+  }
 }

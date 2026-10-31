@@ -60,6 +60,7 @@
     "time": "t (s)",
     "manual": "hand-driven",
     "vectors": "Vectors",
+    "scene": "Scene",
     "vec": {
       "spring": "−kx",
       "damper": "−bẋ",
