@@ -231,3 +231,38 @@ test('the |ψ|² chip and the n = 10 preset switch the scene view', async ({ pag
   await page.getByTestId('preset-cat').click();
   await expect(page.getByTestId('chip-density')).toHaveAttribute('aria-pressed', 'false');
 });
+
+/** The minimum of W the Wigner plot drew last (written on its canvas). */
+const wignerMin = (page: Page) =>
+  page
+    .locator('[data-testid=panel-wigner] canvas')
+    .evaluate((c) => Number((c as HTMLCanvasElement).dataset.wignerMin));
+
+test('the Wigner panel goes negative for a cat and stays positive for a coherent state', async ({
+  page,
+}) => {
+  await page.getByTestId('chip-wigner').click();
+  await expect(page.getByTestId('panel-wigner')).toBeVisible();
+  await page.getByTestId('preset-coherent').click();
+  await expect.poll(() => wignerMin(page)).toBeGreaterThan(-1e-3);
+  await page.getByTestId('preset-cat').click();
+  await expect.poll(() => wignerMin(page)).toBeLessThan(-0.1);
+});
+
+test('the spectrum and uncertainty panels are there; Δx·Δp stays ½ for a coherent state', async ({
+  page,
+}) => {
+  await expect(page.getByTestId('panel-spectrum')).toBeVisible();
+  await page.getByTestId('chip-uncertainty').click();
+  await expect(page.getByTestId('panel-uncertainty')).toBeVisible();
+  const worst = await run<number>(
+    page,
+    `let w = 0;
+     for (let i = 0; i < 120; i++) {
+       s.loop.advanceFrame();
+       w = Math.max(w, Math.abs(s.spec.model.observables(s.state, s.params, 0, {}).dxdp - 0.5));
+     }
+     return w;`,
+  );
+  expect(worst).toBeLessThan(1e-9);
+});

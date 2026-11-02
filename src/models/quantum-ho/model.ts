@@ -241,6 +241,18 @@ export const qhoModel: Model<Float64Array, QhoParams, QhoInit> & Kinematic<Float
   }),
 };
 
+/** The state with its time phases undone, cₙ e^{iEₙt}: constant under free evolution. */
+export function phaseFree(s: Float64Array, t: number, out: Float64Array): void {
+  for (let n = 0; n < LEVELS; n++) {
+    const c = Math.cos(energy(n) * t);
+    const sn = Math.sin(energy(n) * t);
+    const re = s[n]!;
+    const im = s[IM + n]!;
+    out[n] = re * c - im * sn;
+    out[IM + n] = re * sn + im * c;
+  }
+}
+
 /** ψ(x_j) = Σ cₙ ψₙ(x_j) on the grid, into preallocated buffers of length J. */
 export function evalPsi(s: Float64Array, outRe: Float64Array, outIm: Float64Array): void {
   outRe.fill(0);

@@ -389,3 +389,30 @@ test('screenshot quantum narrow + preset explanation', async ({ page }) => {
   await page.waitForTimeout(300);
   await page.screenshot({ path: 'e2e/screenshots/quantum-narrow.png' });
 });
+
+test('screenshot quantum plots: spectrum, ⟨x⟩ ⟨p⟩, uncertainty, phase space, Wigner', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1300 });
+  await open(page, '/#/quantum-ho', 'es');
+  for (const id of ['uncertainty', 'phase', 'wigner']) await page.getByTestId(`chip-${id}`).click();
+  const shot = async (preset: string, frames: number, name: string) => {
+    await page.getByTestId(`preset-${preset}`).click();
+    await sim(page, `for (let i = 0; i < ${frames}; i++) s.loop.advanceFrame(); s.pause();`);
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: `e2e/screenshots/quantum-plots-${name}.png` });
+  };
+  await shot('coherent', 150, 'coherent');
+  await shot('cat', 330, 'cat');
+});
+
+test('screenshot presentation quantum (Schrödinger on canvas)', async ({ page }) => {
+  await open(page, '/#/quantum-ho', 'es');
+  await page.getByTestId('preset-cat').click();
+  await page.getByTestId('chip-wigner').click();
+  await sim(page, 'for (let i = 0; i < 200; i++) s.loop.advanceFrame();');
+  await page.keyboard.press('p');
+  await page.waitForTimeout(800);
+  await saveCanvas(page, 'e2e/screenshots/present-quantum-canvas.png');
+});

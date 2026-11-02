@@ -61,6 +61,12 @@ export const forces = {
   net: '#E5484D',
 } as const;
 
+/** Diverging map for signed densities on the dark panel (Wigner function): rgb. */
+export const diverging = {
+  positive: [91, 155, 255],
+  negative: [255, 112, 102],
+} as const;
+
 /** Dashpot fluid by damping: water → oil → honey (rgb + opacity). */
 export const fluids = {
   water: { rgb: [124, 200, 245], a: 0.32 },

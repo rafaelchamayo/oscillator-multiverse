@@ -39,6 +39,8 @@ export interface SeriesDef {
   lane?: string;
   /** Drawn dashed (analytic references such as the steady state). */
   dash?: boolean;
+  /** Reference value drawn as a dashed line in its lane (e.g. Heisenberg's ½), with its label. */
+  ref?: { value: number; label: string };
   /** Shown only while this holds (e.g. x₄ only when there are 4 bodies). */
   when?(params: Record<string, number>): boolean;
 }

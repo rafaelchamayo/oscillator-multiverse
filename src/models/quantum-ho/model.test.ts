@@ -9,12 +9,13 @@ import {
   evalPsi,
   meanP,
   meanX,
+  phaseFree,
   qhoModel,
   setCoefficient,
   superposeInit,
   type QhoInit,
 } from './model';
-import { WIGNER_GRID, rotatedPoint, wignerCoord, wignerFromPsi } from './wigner';
+import { WIGNER_GRID, rotatedPoint, wignerCoord, wignerFromPsi, wignerOfState } from './wigner';
 
 const p = QHO_DEFAULTS;
 const make = (init: QhoInit) => qhoModel.createState(p, init);
@@ -294,5 +295,15 @@ describe('Wigner function', () => {
       }
     }
     expect(worst).toBeLessThan(1e-10);
+  });
+
+  it('is computed once: the phase-free state does not change under evolution', () => {
+    const s0 = mixed();
+    const t = 7.3;
+    const back = new Float64Array(s0.length);
+    phaseFree(evolve(s0.slice(), t, 50), t, back);
+    for (let i = 0; i < s0.length; i++) expect(Math.abs(back[i]! - s0[i]!)).toBeLessThan(1e-12);
+    // So W at any t is W of the phase-free state, turned (what the plot draws).
+    expect(wignerOfState(back)[0]).toBeCloseTo(W(s0)[0]!, 12);
   });
 });

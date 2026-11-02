@@ -4,7 +4,7 @@ import type { MatrixEntry, MatrixOde, OdeEquation, OdeTerm } from '../models/typ
  * Minimal canvas renderer for our ODEs, so presentation mode can draw (and record) them:
  * `captureStream()` only sees the canvas, not KaTeX's DOM. It understands the subset our
  * models emit: numbers, letters, `\dot x`, `\ddot x`, `\,`, `\cdot`, `\cos`, parentheses,
- * and matrix forms (`OdeEquation.matrix`), and uses KaTeX's own fonts so it looks like the
+ * `\psi`, `\partial`, superscripts, `\frac`/`\tfrac` (stacked), and matrix forms (`OdeEquation.matrix`), and uses KaTeX's own fonts so it looks like the
  * interactive view.
  */
 interface Glyph {
@@ -12,10 +12,24 @@ interface Glyph {
   font: 'math' | 'main' | 'bold';
   /** Subscript (matrix vectors: x₁…xₙ). */
   sub?: string;
+  /** Superscript (x², ∂²). */
+  sup?: string;
+  /** A stacked fraction: the glyph's own text is empty. `scale` is relative to the size. */
+  frac?: { num: Glyph[]; den: Glyph[]; scale: number };
   /** Dots above (time derivatives). */
   dots: number;
   /** Extra space before, in em. */
   space: number;
+}
+
+/** Index just past the brace group that opens at `i` (latex[i] === '{'). */
+function closeBrace(latex: string, i: number): number {
+  let depth = 0;
+  for (let k = i; k < latex.length; k++) {
+    if (latex[k] === '{') depth++;
+    else if (latex[k] === '}' && --depth === 0) return k + 1;
+  }
+  return latex.length;
 }
 
 function tokenize(latex: string): Glyph[] {
@@ -29,7 +43,33 @@ function tokenize(latex: string): Glyph[] {
   while (i < latex.length) {
     const rest = latex.slice(i);
     let m: RegExpMatchArray | null;
-    if ((m = rest.match(/^\\(d+)ot\s*\{?\s*([a-zA-Z])\}?/))) {
+    if ((m = rest.match(/^\\t?frac\s*(?=\{)/))) {
+      const a = i + m[0].length;
+      const b = closeBrace(latex, a);
+      const c = closeBrace(latex, b);
+      out.push({
+        text: '',
+        font: 'main',
+        dots: 0,
+        space: pending,
+        frac: {
+          num: tokenize(latex.slice(a + 1, b - 1)),
+          den: tokenize(latex.slice(b + 1, c - 1)),
+          scale: m[0].startsWith('\\t') ? 0.62 : 0.85,
+        },
+      });
+      pending = 0;
+      i = c;
+      continue;
+    } else if ((m = rest.match(/^\^(\{[^}]*\}|.)/))) {
+      const prev = out[out.length - 1];
+      const text = m[1]!.replace(/[{}]/g, '');
+      if (prev) prev.sup = text;
+    } else if ((m = rest.match(/^\\partial/))) {
+      push('∂', 'main');
+    } else if ((m = rest.match(/^\\psi/))) {
+      push('ψ', 'math');
+    } else if ((m = rest.match(/^\\(d+)ot\s*\{?\s*([a-zA-Z])\}?/))) {
       push(m[2]!, 'math', m[1]!.length);
     } else if ((m = rest.match(/^\\,/))) {
       pending += 0.17;
@@ -105,15 +145,49 @@ const SUB_SCALE = 0.7;
 function runWidth(g: CanvasRenderingContext2D, run: Glyph[], size: number): number {
   let w = 0;
   for (const p of run) {
-    g.font = fontOf(p, size);
-    w += p.space * size + g.measureText(p.text).width;
-    if (p.sub) {
-      g.font = `${size * SUB_SCALE}px KaTeX_Main, serif`;
-      w += g.measureText(p.sub).width;
+    w += p.space * size;
+    if (p.frac) {
+      w += fracWidth(g, p.frac, size);
+      continue;
     }
+    g.font = fontOf(p, size);
+    w += g.measureText(p.text).width;
+    const script = Math.max(scriptWidth(g, p.sub, size), scriptWidth(g, p.sup, size));
+    w += script;
   }
   return w;
 }
+
+function scriptWidth(g: CanvasRenderingContext2D, text: string | undefined, size: number): number {
+  if (!text) return 0;
+  g.font = `${size * SUB_SCALE}px KaTeX_Main, serif`;
+  return g.measureText(text).width;
+}
+
+/** Side bearing of a fraction bar, in em. */
+const FRAC_PAD = 0.12;
+
+function fracWidth(g: CanvasRenderingContext2D, f: NonNullable<Glyph['frac']>, size: number) {
+  const s = size * f.scale;
+  return Math.max(runWidth(g, f.num, s), runWidth(g, f.den, s)) + 2 * FRAC_PAD * size;
+}
+
+/** Height of a run above (`up`) and below (`down`) its baseline, in px: fractions are taller. */
+function runExtent(run: Glyph[], size: number): { up: number; down: number } {
+  let up = 0.75 * size;
+  let down = 0.25 * size;
+  for (const p of run) {
+    if (!p.frac) continue;
+    const s = size * p.frac.scale;
+    up = Math.max(up, AXIS * size + FRAC_GAP * size + runExtent(p.frac.num, s).down + 0.75 * s);
+    down = Math.max(down, -AXIS * size + FRAC_GAP * size + 0.75 * s + 0.25 * s);
+  }
+  return { up, down };
+}
+
+/** Height of the fraction bar above the baseline, and the gap from bar to num/den, in em. */
+const AXIS = 0.27;
+const FRAC_GAP = 0.2;
 
 /** Draws a run of glyphs from x on baseline y; `colorOf` picks each glyph's color. */
 function drawRun(
@@ -129,6 +203,21 @@ function drawRun(
   let cx = x;
   for (const p of run) {
     cx += p.space * size;
+    if (p.frac) {
+      const f = p.frac;
+      const s = size * f.scale;
+      const fw = fracWidth(g, f, size);
+      const color = colorOf(p);
+      const bar = y - AXIS * size;
+      g.fillStyle = color;
+      g.fillRect(cx, bar - size * 0.025, fw, size * 0.05);
+      const nw = runWidth(g, f.num, s);
+      const dw = runWidth(g, f.den, s);
+      drawRun(g, f.num, cx + (fw - nw) / 2, bar - FRAC_GAP * size - 0.22 * s, s, () => color);
+      drawRun(g, f.den, cx + (fw - dw) / 2, bar + FRAC_GAP * size + 0.72 * s, s, () => color);
+      cx += fw;
+      continue;
+    }
     g.font = fontOf(p, size);
     const w = g.measureText(p.text).width;
     g.fillStyle = colorOf(p);
@@ -143,10 +232,12 @@ function drawRun(
       g.fill();
     }
     cx += w;
-    if (p.sub) {
+    if (p.sub || p.sup) {
       g.font = `${size * SUB_SCALE}px KaTeX_Main, serif`;
-      g.fillText(p.sub, cx, y + size * 0.22);
-      cx += g.measureText(p.sub).width;
+      if (p.sub) g.fillText(p.sub, cx, y + size * 0.22);
+      if (p.sup) g.fillText(p.sup, cx, y - size * 0.4);
+      cx += Math.max(scriptWidth(g, p.sub, size), scriptWidth(g, p.sup, size));
+      g.font = fontOf(p, size);
     }
   }
 }
@@ -308,7 +399,10 @@ export function measureEquation(
 
 /** Height in pixels of the equation at `size` (taller than one line for matrix forms). */
 export function equationHeight(eq: OdeEquation, size: number): number {
-  return eq.matrix ? (eq.matrix.M.length * ROW + 0.2) * size : size;
+  if (eq.matrix) return (eq.matrix.M.length * ROW + 0.2) * size;
+  const { up, down } = runExtent(pieces(eq), size);
+  // One line of text is `size`; fractions add what sticks out beyond it.
+  return Math.max(size, up + down);
 }
 
 /** Draws the equation with its left end at x and baseline (of its middle row) at y. */

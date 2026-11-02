@@ -129,14 +129,22 @@
     "phase10": "Phase"
   },
   "chips": {
+    "spectrum": "Spectrum",
     "expect": "⟨x⟩, ⟨p⟩",
     "density": "|ψ|²",
     "reim": "Re ψ, Im ψ",
     "classical": "Classical",
-    "carpet": "Carpet"
+    "carpet": "Carpet",
+    "uncertainty": "Δx·Δp",
+    "phase": "⟨x⟩–⟨p⟩",
+    "wigner": "Wigner"
   },
   "panels": {
-    "expect": "Expectation values"
+    "spectrum": "Spectrum",
+    "expect": "Expectation values",
+    "uncertainty": "Uncertainty",
+    "phase": "Phase space",
+    "wigner": "Wigner function"
   },
   "levelInfo": "E = {E} ħω · {nodes} nodes",
   "badge": {

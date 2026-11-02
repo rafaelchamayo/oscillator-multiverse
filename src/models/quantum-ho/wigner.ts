@@ -1,4 +1,5 @@
 import { DX, J, J0 } from './hermite';
+import { evalPsi } from './model';
 
 /**
  * Wigner function W(x, p) = (1/π) ∫ ψ*(x + y) ψ(x − y) e^{2ipy} dy (ħ = 1), sampled on a square
@@ -89,4 +90,17 @@ export function rotatedPoint(x: number, p: number, t: number): [number, number] 
   const c = Math.cos(t);
   const s = Math.sin(t);
   return [x * c - p * s, x * s + p * c];
+}
+
+const psiRe = new Float64Array(J);
+const psiIm = new Float64Array(J);
+
+/** W on the grid of the state with coefficients `s` (see `wignerFromPsi`). */
+export function wignerOfState(
+  s: Float64Array,
+  g: WignerGrid = WIGNER_GRID,
+  out?: Float64Array,
+): Float64Array {
+  evalPsi(s, psiRe, psiIm);
+  return wignerFromPsi(psiRe, psiIm, g, out);
 }

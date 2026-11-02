@@ -162,3 +162,27 @@ test('keyboard focus is visible on toolbar buttons', async ({ page }) => {
   expect(outline.style).toBe('solid');
   expect(parseFloat(outline.width)).toBeGreaterThanOrEqual(2);
 });
+
+test('presentation draws the Schrödinger equation on the canvas for the quantum tab', async ({
+  page,
+}) => {
+  await page.goto('/#/quantum-ho');
+  await page.waitForFunction(() => 'debug' in ((window as { __osc?: object }).__osc ?? {}));
+  await page.keyboard.press('p');
+  await expect(page.getByTestId('present-canvas')).toBeVisible();
+  // The ODE card is taller than one line: stacked fractions ∂ψ/∂t and ∂²ψ/∂x².
+  const tall = await page.evaluate(() => {
+    const c = document.querySelector('[data-testid=present-canvas]') as HTMLCanvasElement;
+    const g = c.getContext('2d')!;
+    // Ink in the ODE pill's band above and below the middle line of text.
+    const row = (y: number) => {
+      const d = g.getImageData(300, y, 600, 1).data;
+      let ink = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i]! < 80 && d[i + 1]! < 80) ink++;
+      return ink;
+    };
+    return { top: row(75), bottom: row(125) };
+  });
+  expect(tall.top).toBeGreaterThan(0);
+  expect(tall.bottom).toBeGreaterThan(0);
+});

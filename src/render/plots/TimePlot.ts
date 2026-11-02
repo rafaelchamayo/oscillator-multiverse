@@ -24,9 +24,18 @@ export class TimePlot implements Plot {
   constructor(
     private readonly series: SeriesDef[],
     private readonly mode: 'lanes' | 'overlay',
-    private readonly opts: { minSpan?: number; includeZero?: boolean } = {},
+    private readonly opts: {
+      minSpan?: number;
+      includeZero?: boolean;
+      /** Time axis name and unit (default "t", "s"; natural units use "ωt", ""). */
+      time?: { label: string; unit: string };
+    } = {},
   ) {
     this.shared = new AutoScale({ minSpan: opts.minSpan ?? 0.1, includeZero: opts.includeZero });
+  }
+
+  private get time() {
+    return this.opts.time ?? { label: 't', unit: 's' };
   }
 
   reset(): void {
@@ -93,8 +102,8 @@ export class TimePlot implements Plot {
       let hi = -Infinity;
       for (const s of lane.series) {
         const [a, b] = minMax(h, s.key, from, to);
-        lo = Math.min(lo, a);
-        hi = Math.max(hi, b);
+        lo = Math.min(lo, a, s.ref?.value ?? a);
+        hi = Math.max(hi, b, s.ref?.value ?? b);
       }
       lane.scale.update(lo, hi, ctx.dt);
       const r = lane.rect;
@@ -104,6 +113,25 @@ export class TimePlot implements Plot {
       g.beginPath();
       g.rect(r.x, r.y - 2, r.w, r.h + 4);
       g.clip();
+      for (const s of lane.series) {
+        if (!s.ref) continue;
+        const y = Math.round(r.y + r.h - lane.scale.frac(s.ref.value) * r.h) + 0.5;
+        g.strokeStyle = S.label;
+        g.globalAlpha = 0.8;
+        g.lineWidth = 1.2;
+        g.setLineDash([5, 4]);
+        g.beginPath();
+        g.moveTo(r.x, y);
+        g.lineTo(r.x + r.w, y);
+        g.stroke();
+        g.setLineDash([]);
+        g.globalAlpha = 1;
+        g.font = `500 10px ${fonts.mono}`;
+        g.fillStyle = S.label;
+        g.textAlign = 'right';
+        g.textBaseline = 'bottom';
+        g.fillText(s.ref.label, r.x + r.w - 4, y - 2);
+      }
       for (const s of lane.series) {
         const rb = h.get(s.key);
         const Y = (i: number) => r.y + r.h - lane.scale.frac(rb.get(i)) * r.h;
@@ -173,7 +201,7 @@ export class TimePlot implements Plot {
           g,
           x - 30,
           height - bottom + 3,
-          `t = ${formatNumber(h.t.get(i))} s`,
+          `${this.time.label} = ${formatNumber(h.t.get(i))}${this.time.unit ? ` ${this.time.unit}` : ''}`,
           S.label,
           bounds,
         );
@@ -217,6 +245,7 @@ export class TimePlot implements Plot {
       g.fillText(formatNumber(t, step < 1 ? 1 : 0), x, y + 5);
     }
     g.textAlign = 'right';
-    g.fillText('t (s)', left + plotW, y + 5);
+    const T = this.time;
+    g.fillText(T.unit ? `${T.label} (${T.unit})` : T.label, left + plotW, y + 5);
   }
 }

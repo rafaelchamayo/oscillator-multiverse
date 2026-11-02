@@ -5,6 +5,7 @@ import {
   coherentInit,
   eigenInit,
   energy,
+  phaseFree,
   qhoModel,
   setCoefficient,
   superposeInit,
@@ -12,8 +13,12 @@ import {
   type QhoParams,
 } from '../../models/quantum-ho/model';
 import type { Observables } from '../../models/types';
+import { WIGNER_GRID, wignerCoord, wignerOfState } from '../../models/quantum-ho/wigner';
+import { PhasePlot } from '../../render/plots/PhasePlot';
+import { SpectrumPlot } from '../../render/plots/SpectrumPlot';
 import { TimePlot } from '../../render/plots/TimePlot';
-import { colors, phaseColor, series as S } from '../../render/theme';
+import { WignerPlot } from '../../render/plots/WignerPlot';
+import { colors, diverging, phaseColor, series as S } from '../../render/theme';
 import type { MechanicalSimSpec, ObjectDef, OscillatorPlugin, ParamDef, PresetDef } from '../types';
 import es from './i18n/es.json';
 import en from './i18n/en.json';
@@ -117,6 +122,9 @@ const presets: PresetDef[] = [
 
 const obs: Observables = {};
 
+/** Natural units: time is ωt. */
+const time = { label: 'ωt', unit: '' };
+
 const sim: MechanicalSimSpec<QhoParams, QhoInit> = {
   kind: 'mechanical1d',
   model: qhoModel,
@@ -138,7 +146,26 @@ const sim: MechanicalSimSpec<QhoParams, QhoInit> = {
   },
   historyKeys: ['x', 'v', 'dx', 'dp', 'dxdp', 'E', 'K', 'U'],
   chips: [
+    {
+      id: 'spectrum',
+      labelKey: 'osc.quantum-ho.chips.spectrum',
+      defaultOn: true,
+      color: phaseColor(0),
+    },
     { id: 'x', labelKey: 'osc.quantum-ho.chips.expect', defaultOn: true, color: S.x },
+    {
+      id: 'uncertainty',
+      labelKey: 'osc.quantum-ho.chips.uncertainty',
+      defaultOn: false,
+      color: S.a,
+    },
+    { id: 'phase', labelKey: 'osc.quantum-ho.chips.phase', defaultOn: false, color: '#9B7BFF' },
+    {
+      id: 'wigner',
+      labelKey: 'osc.quantum-ho.chips.wigner',
+      defaultOn: false,
+      color: `rgb(${diverging.negative.join(',')})`,
+    },
     {
       id: 'density',
       labelKey: 'osc.quantum-ho.chips.density',
@@ -170,6 +197,12 @@ const sim: MechanicalSimSpec<QhoParams, QhoInit> = {
   ],
   panels: [
     {
+      id: 'spectrum',
+      titleKey: 'osc.quantum-ho.panels.spectrum',
+      chips: ['spectrum'],
+      create: () => new SpectrumPlot(LEVELS),
+    },
+    {
       id: 'expect',
       titleKey: 'osc.quantum-ho.panels.expect',
       chips: ['x'],
@@ -180,6 +213,50 @@ const sim: MechanicalSimSpec<QhoParams, QhoInit> = {
             { key: 'v', label: '⟨p⟩', unit: 'ħ/ℓ', color: S.v },
           ],
           'lanes',
+          { time },
+        ),
+    },
+    {
+      id: 'uncertainty',
+      titleKey: 'osc.quantum-ho.panels.uncertainty',
+      chips: ['uncertainty'],
+      create: () =>
+        new TimePlot(
+          [
+            { key: 'dx', label: 'Δx', unit: 'ℓ', color: S.x, lane: 'spread' },
+            { key: 'dp', label: 'Δp', unit: 'ħ/ℓ', color: S.v, lane: 'spread' },
+            {
+              key: 'dxdp',
+              label: 'Δx·Δp',
+              unit: 'ħ',
+              color: S.a,
+              ref: { value: 0.5, label: 'ħ/2' },
+            },
+          ],
+          'lanes',
+          { time, includeZero: true },
+        ),
+    },
+    {
+      id: 'phase',
+      titleKey: 'osc.quantum-ho.panels.phase',
+      chips: ['phase'],
+      create: () => new PhasePlot('x', 'v', { x: '⟨x⟩', v: '⟨p⟩', xUnit: 'ℓ', vUnit: 'ħ/ℓ' }),
+    },
+    {
+      id: 'wigner',
+      titleKey: 'osc.quantum-ho.panels.wigner',
+      chips: ['wigner'],
+      create: () =>
+        new WignerPlot(
+          {
+            size: WIGNER_GRID.size,
+            extent: -wignerCoord(WIGNER_GRID, 0),
+            phaseFree,
+            compute: (c) => wignerOfState(c),
+          },
+          'x',
+          'v',
         ),
     },
   ],

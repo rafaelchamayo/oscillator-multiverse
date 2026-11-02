@@ -332,6 +332,25 @@ Minor, reversible decisions taken during implementation, and why.
 - **Narrow windows**: below 1100 px, inactive tabs show only their icon, and the label moves to `title`. Below
   760 px the brand title is hidden, which leaves room for four tabs.
 
+## Quantum harmonic oscillator — Q4: plots and presentation
+
+- **Spectrum** (`SpectrumPlot`, on by default): one bar of |cₙ|² per level, colored with the scene's phase
+  wheel. The heights only change when something edits the state, but the colors cycle at Eₙ. The axis top
+  snaps to 1, ½ or ¼.
+- **⟨x⟩, ⟨p⟩ and uncertainty**: `TimePlot` with lanes. Δx and Δp share a lane, and Δx·Δp has a dashed ħ/2
+  reference (`SeriesDef.ref`, which autoscale includes). `TimePlot` takes a `time` axis option: the quantum
+  plots use ωt with no unit.
+- **Phase space**: the existing `PhasePlot` of (⟨x⟩, ⟨p⟩), a circle for a coherent state (Ehrenfest).
+- **Wigner** (`WignerPlot`): W is computed from the phase-free state cₙe^{iEₙt}, which free evolution leaves
+  unchanged, so it is recomputed (~50 ms, 121² samples) only when an edit moves it. Each frame draws the cached
+  image rotated by ωt with `drawImage` (0.6 ms per frame on average). The map is diverging, blue for W > 0 and
+  red for W < 0 (`theme.diverging`), with |W|^0.7 contrast so the fringes of a cat show. The plot writes
+  `W min` on screen and in `canvas.dataset.wignerMin` for the e2e tests.
+- **Canvas Schrödinger equation**: `drawMath` now handles `\frac` (stacked, 0.85 of the size), `\tfrac`
+  (0.62), `\partial`, `\psi` and superscripts. `equationHeight` grows for fractions, so the presentation ODE
+  pill fits them.
+- Panel titles carry no math: the panel CSS uppercases them, which turns ⟨x⟩ into ⟨X⟩.
+
 ## Notes
 
 - **Energy balance (driven)**: the state is augmented with W_in = ∫F·v dt and W_diss = ∫b v² dt, integrated by

@@ -35,7 +35,8 @@ size with `f.ppx` (magnify with zoom); handles/labels with `f.px` (constant on s
 Plots: a plugin's `sim` declares `historyKeys`, `chips` and `panels` (each panel = a `Plot` from
 `src/render/plots/`, shown while any of its chips is on). `SimController` samples a `History` on every step and
 draws registered plot canvases each frame. A `SeriesDef.when(params)` hides series that do
-not apply (e.g. x₄ with three bodies). Gravity changes go through `spec.setGravity` + `spec.equilibrium`.
+not apply (e.g. x₄ with three bodies), and `SeriesDef.ref` adds a dashed reference line.
+Plots of the state itself (quantum spectrum, Wigner) read `PlotCtx.state`. Gravity changes go through `spec.setGravity` + `spec.equilibrium`.
 
 ## Conventions
 
@@ -92,4 +93,4 @@ Quantum harmonic oscillator 1D tab (superpositions of eigenstates, natural units
 - [x] Q1 — Physics (Hermite basis, exact evolution, coherent/cat states, ladder observables, Wigner function, tests)
 - [x] Q2 — Runtime + placeholder (custom drag handles, `editState`, `PlotCtx.state`, minimal tab)
 - [x] Q3 — Scene and interaction (levels, domain coloring, phasor wheels, packet fling, classical overlay, carpet, presets)
-- [ ] Q4 — Plots and presentation (spectrum, ⟨x⟩/⟨p⟩, uncertainty, phase plot, Wigner, canvas Schrödinger)
+- [x] Q4 — Plots and presentation (spectrum, ⟨x⟩/⟨p⟩, uncertainty, phase plot, Wigner, canvas Schrödinger)
